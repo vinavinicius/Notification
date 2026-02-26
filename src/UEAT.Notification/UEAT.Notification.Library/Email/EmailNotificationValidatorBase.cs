@@ -8,7 +8,7 @@ internal abstract class EmailNotificationValidatorBase<T> : AbstractValidator<T>
 {
     protected EmailNotificationValidatorBase()
     {
-        RuleFor(x => x.To)
+        RuleFor(x => x.To.Address)
             .NotEmpty()
             .EmailAddress()
             .WithMessage("'To' must be a valid email address.");

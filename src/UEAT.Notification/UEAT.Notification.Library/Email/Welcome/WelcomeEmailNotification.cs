@@ -1,14 +1,15 @@
 using System.Globalization;
 using UEAT.Notification.Core;
 using UEAT.Notification.Core.Email;
+using UEAT.Notification.Core.ValueObjects;
 
 namespace UEAT.Notification.Library.Email.Welcome;
 
-public class WelcomeEmailNotification(CultureInfo cultureInfo, string to, string subject)
+public class WelcomeEmailNotification(CultureInfo cultureInfo, EmailAddress to, string subject)
     : IEmailNotification
 {
     public CultureInfo CultureInfo { get; } = cultureInfo;
-    public string To { get; } = to;
+    public EmailAddress To { get; } = to;
     public string Subject { get; } = subject;
     public TemplateRendererType TemplateRendererType { get; } = TemplateRendererType.Razor;
     

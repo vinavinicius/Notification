@@ -1,5 +1,6 @@
 using System.Globalization;
 using UEAT.Notification.Core;
+using UEAT.Notification.Core.ValueObjects;
 using UEAT.Notification.Infrastructure.DependencyInjection;
 using UEAT.Notification.Library.DependencyInjection;
 using UEAT.Notification.Library.SMS.Welcome;
@@ -30,7 +31,7 @@ app.MapPost("/send-sms", async (INotificationSender sender, SmsRequest request, 
     {
         logger.LogInformation("Sending SMS to {PhoneNumber}", request.PhoneNumber);
         var culture = new CultureInfo(request.Language ?? "en-CA");
-        var notification = new WelcomeSmsNotification(culture, request.PhoneNumber)
+        var notification = new WelcomeSmsNotification(culture, new MobilePhone("1", "581", request.PhoneNumber))
         {
             Message = request.Message ?? "Welcome!"
         };

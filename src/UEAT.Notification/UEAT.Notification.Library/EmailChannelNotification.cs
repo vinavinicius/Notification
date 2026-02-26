@@ -10,7 +10,7 @@ public class EmailChannelNotification(IEmailClient emailClient)
         string renderedContent,
         CancellationToken cancellationToken)
     {
-        var emailMessage = new EmailMessage(emailNotification.To, emailNotification.Subject, renderedContent);
+        var emailMessage = new EmailMessage(emailNotification.To.Address, emailNotification.Subject, renderedContent);
         await emailClient.SendAsync(emailMessage, cancellationToken);
     }
 }

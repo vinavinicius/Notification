@@ -8,7 +8,7 @@ public abstract class SmsNotificationValidatorBase<T> : AbstractValidator<T>
 {
     protected SmsNotificationValidatorBase()
     {
-        RuleFor(x => x.MobilePhone)
+        RuleFor(x => x.MobilePhone.FullNumber)
             .NotNull()
             .NotEmpty()
             .Matches(@"^\+?[1-9]\d{1,14}$")

@@ -10,7 +10,7 @@ public class SmsChannelNotification(ISmsClient smsClient)
         string renderedContent,
         CancellationToken cancellationToken)
     {
-        var smsMessage = new SmsMessage(notification.MobilePhone, renderedContent);
+        var smsMessage = new SmsMessage(notification.MobilePhone.FullNumber, renderedContent);
         await smsClient.SendAsync(smsMessage, cancellationToken);
     }
 }
