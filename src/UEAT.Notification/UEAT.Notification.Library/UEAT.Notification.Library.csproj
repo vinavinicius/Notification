@@ -8,11 +8,17 @@
 
     <ItemGroup>
         <EmbeddedResource Include="**/*.cshtml" />
-        <EmbeddedResource Update="SMS\Welcome\FR.resx">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <EmbeddedResource Update="Email\Welcome\WelcomeEmailNotification.en.resx">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </EmbeddedResource>
-        <EmbeddedResource Update="SMS\Welcome\EN.resx">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <EmbeddedResource Update="Email\Welcome\WelcomeEmailNotification.fr.resx">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SMS\Welcome\WelcomeSmsNotification.en.resx">
+          <DependentUpon>WelcomeSmsNotification.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SMS\Welcome\WelcomeSmsNotification.fr.resx">
+          <DependentUpon>WelcomeSmsNotification.resx</DependentUpon>
         </EmbeddedResource>
     </ItemGroup>
 

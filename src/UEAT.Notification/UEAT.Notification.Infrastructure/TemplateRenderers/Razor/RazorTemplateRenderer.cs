@@ -1,19 +1,12 @@
-using System.Collections.Concurrent;
-using System.Globalization;
-using System.Reflection;
-using Microsoft.Extensions.Localization;
+using System.Resources;
 using RazorLight;
 using UEAT.Notification.Core;
 
 namespace UEAT.Notification.Infrastructure.TemplateRenderers.Razor;
 
-public class RazorTemplateRenderer(
-    IRazorLightEngine razorLightEngine,
-    IStringLocalizerFactory stringLocalizerFactory) : ITemplateRenderer
+public class RazorTemplateRenderer(IRazorLightEngine razorLightEngine) : ITemplateRenderer
 {
-    private readonly ConcurrentDictionary<string, IStringLocalizer> _localizerCache = new();
-
-    public TemplateRendererType RendererType { get; } = TemplateRendererType.Razor;
+    public TemplateRendererType RendererType => TemplateRendererType.Razor;
 
     public async Task<string> RenderAsync(INotification notification)
     {
@@ -21,33 +14,16 @@ public class RazorTemplateRenderer(
         return await razorLightEngine.CompileRenderAsync(model.TemplatePath, model);
     }
 
-    private RazorTemplateModel CreateTemplateModel(INotification notification)
+    private static RazorTemplateModel CreateTemplateModel(INotification notification)
     {
-        var templatePath = GetTemplatePath(notification);
-        var localizer = GetLocalizer(notification);
+        var resourceManager = new ResourceManager(
+            notification.GetType().FullName!,
+            notification.GetType().Assembly
+        );
 
-        return new RazorTemplateModel(notification, localizer, templatePath);
+        return new RazorTemplateModel(notification, resourceManager, notification.CultureInfo, GetTemplatePath(notification));
     }
 
     private static string GetTemplatePath(INotification notification)
-    {
-        var templateNamespace = GetTemplateNamespace(notification);
-        return $"{templateNamespace}.Template.cshtml";
-    }
-
-    private IStringLocalizer GetLocalizer(INotification notification)
-    {
-        var templateNamespace = GetTemplateNamespace(notification);
-        var template = $"{templateNamespace}.{notification.CultureInfo.TwoLetterISOLanguageName.ToUpper()}";
-
-        return _localizerCache.GetOrAdd(template, _ =>
-        {
-            var name = notification.GetType().Assembly.GetName().Name;
-            var localizer = stringLocalizerFactory.Create(template, name!);
-            return localizer;
-        });
-    }
-
-    private static string GetTemplateNamespace(INotification notification)
-        => notification.GetType().Namespace!;
+        => $"{notification.GetType().Namespace}.Template.cshtml";
 }
