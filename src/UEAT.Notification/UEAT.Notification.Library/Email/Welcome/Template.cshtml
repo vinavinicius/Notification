@@ -1,0 +1,13 @@
+@using RazorLight;
+@using UEAT.Notification.Library.Email.Welcome
+@inherits TemplatePage<dynamic>
+
+@{
+    DisableEncoding = true;
+    Layout = null;
+    var resourceManager = Model.ResourceManager;
+    var data = (WelcomeEmailNotification)Model.Data;
+}
+@resourceManager.GetString("Summary")
+
+@data.To

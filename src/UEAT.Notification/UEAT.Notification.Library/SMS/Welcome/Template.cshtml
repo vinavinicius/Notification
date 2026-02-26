@@ -1,0 +1,12 @@
+@using Microsoft.Extensions.Localization
+@using UEAT.Notification.Library.SMS.Welcome
+@inherits RazorLight.TemplatePage<dynamic>
+
+@{
+    DisableEncoding = true;
+    Layout = null;
+    
+    IStringLocalizer L = Model.Localizer;
+    var data = (WelcomeSmsNotification)Model.Data;
+}
+@L["WelcomeMessage", data.Message]
