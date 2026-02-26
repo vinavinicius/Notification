@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <root>
     <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
         <xsd:element name="root" msdata:IsDataSet="true">
+            
         </xsd:element>
     </xsd:schema>
     <resheader name="resmimetype">
@@ -16,19 +18,7 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="Subject" xml:space="preserve">
-        <value>Welcome to Our Service</value>
-    </data>
-    <data name="Greeting" xml:space="preserve">
-        <value>Hello</value>
-    </data>
     <data name="WelcomeMessage" xml:space="preserve">
-        <value>Welcome to our notification service! We're excited to have you on board.</value>
-    </data>
-    <data name="CompanyIntro" xml:space="preserve">
-        <value>You are now part of</value>
-    </data>
-    <data name="Footer" xml:space="preserve">
-        <value>Best regards, The Notification Team</value>
+        <value>en</value>
     </data>
 </root>

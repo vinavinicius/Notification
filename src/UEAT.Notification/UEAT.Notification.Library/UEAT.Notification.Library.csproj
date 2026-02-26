@@ -20,6 +20,10 @@
         <EmbeddedResource Update="SMS\Welcome\WelcomeSmsNotification.fr.resx">
           <DependentUpon>WelcomeSmsNotification.resx</DependentUpon>
         </EmbeddedResource>
+        <EmbeddedResource Update="Email\Welcome\WelcomeEmailNotification.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>WelcomeEmailNotification.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>

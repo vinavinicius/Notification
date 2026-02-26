@@ -11,4 +11,6 @@ public class WelcomeEmailNotification(CultureInfo cultureInfo, string to, string
     public string To { get; } = to;
     public string Subject { get; } = subject;
     public TemplateRendererType TemplateRendererType { get; } = TemplateRendererType.Razor;
+    
+    public string Template { get; } = "UEAT.Notification.Library.Email.Welcome.Template.cshtml";
 }

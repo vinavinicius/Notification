@@ -3,7 +3,6 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using UEAT.Notification.Core;
-using UEAT.Notification.Library.SMS.Welcome;
 
 namespace UEAT.Notification.Library;
 

@@ -21,9 +21,6 @@ public class RazorTemplateRenderer(IRazorLightEngine razorLightEngine) : ITempla
             notification.GetType().Assembly
         );
 
-        return new RazorTemplateModel(notification, resourceManager, notification.CultureInfo, GetTemplatePath(notification));
+        return new RazorTemplateModel(notification, resourceManager, notification.CultureInfo);
     }
-
-    private static string GetTemplatePath(INotification notification)
-        => $"{notification.GetType().Namespace}.Template.cshtml";
 }
