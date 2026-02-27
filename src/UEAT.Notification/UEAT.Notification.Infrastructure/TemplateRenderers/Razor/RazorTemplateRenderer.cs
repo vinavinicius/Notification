@@ -11,7 +11,7 @@ public class RazorTemplateRenderer(IRazorLightEngine razorLightEngine) : ITempla
     public async Task<string> RenderAsync(INotification notification)
     {
         var model = CreateTemplateModel(notification);
-        return await razorLightEngine.CompileRenderAsync(model.TemplatePath, model);
+        return await razorLightEngine.CompileRenderAsync(notification.Template, model);
     }
 
     private static RazorTemplateModel CreateTemplateModel(INotification notification)

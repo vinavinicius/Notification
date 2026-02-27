@@ -9,8 +9,6 @@ public sealed class RazorTemplateModel(INotification notification, ResourceManag
     public INotification Data { get; } = notification;
     private ResourceManager ResourceManager { get; } = resourceManager;
     private CultureInfo Culture { get; } = culture;
-    public string TemplatePath { get; } = $"{notification.GetType().Namespace}.Template.cshtml";
-
     public string L(string key) => ResourceManager.GetString(key, Culture) ?? key;
     public string L(string key, params object[] args) => string.Format(ResourceManager.GetString(key, Culture) ?? key, args);
 }
