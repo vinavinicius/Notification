@@ -1,5 +1,4 @@
 using System.Globalization;
-using UEAT.Notification.Core;
 using UEAT.Notification.Core.Email;
 using UEAT.Notification.Core.ValueObjects;
 

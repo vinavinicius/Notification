@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using UEAT.Notification.Core;
 
 namespace UEAT.Notification.Library;
