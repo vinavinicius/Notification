@@ -7,17 +7,18 @@ public abstract class ChannelNotificationBase<TNotification> : IChannelNotificat
 {
     public bool CanHandle(INotification notification) => notification is TNotification;
 
-    public Task SendNotificationAsync(
+    public async Task SendNotificationAsync(
         INotification notification,
         string renderedContent,
         CancellationToken cancellationToken)
     {
-        if (notification is TNotification typed)
+        if (notification is not TNotification typed)
         {
-            return SendAsync(typed, renderedContent, cancellationToken);
+            throw new InvalidOperationException($"Expected {typeof(TNotification).Name}");
         }
 
-        throw new InvalidOperationException($"Expected {typeof(TNotification).Name}");
+        await SendAsync(typed, renderedContent, cancellationToken);
+
     }
 
     public abstract Task SendAsync(

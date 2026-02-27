@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -6,7 +7,7 @@ using UEAT.Notification.Core;
 
 namespace UEAT.Notification.Library;
 
-public sealed class NotificationSender(
+public class NotificationSender(
     IEnumerable<IChannelNotification> channels,
     IEnumerable<ITemplateRenderer> templateRenderers,
     IServiceProvider serviceProvider,
@@ -35,15 +36,23 @@ public sealed class NotificationSender(
             logger.LogError(ex,
                 "Failed to send notification via {SenderType}. Notification: {notification}",
                 channel.GetType().Name,
-                JsonSerializer.Serialize(notification));
+                JsonSerializer.Serialize(notification, new JsonSerializerOptions
+                {
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                    MaxDepth = 128
+                }));
 
             throw;
         }
-        
+
         logger.LogInformation(
             "Notification sent successfully via {SenderType}. Notification: {notification}",
             channel.GetType().Name,
-            JsonSerializer.Serialize(notification));
+            JsonSerializer.Serialize(notification, new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                MaxDepth = 128
+            }));
     }
 
     private async Task ValidateAsync<T>(T notification, CancellationToken cancellationToken) where T : INotification
@@ -67,13 +76,13 @@ public sealed class NotificationSender(
     private async Task<string> RenderContentAsync(INotification notification)
     {
         var templateRenderer = templateRenderers.FirstOrDefault(s => s.CanRender(notification));
-        
+
         if (templateRenderer is null)
         {
             throw new InvalidOperationException(
                 $"No template renderer registered for notification type: {notification.GetType().Name}");
         }
-        
+
         return await templateRenderer.RenderAsync(notification);
     }
 }

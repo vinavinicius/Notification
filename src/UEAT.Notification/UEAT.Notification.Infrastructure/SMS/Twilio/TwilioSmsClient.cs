@@ -40,6 +40,14 @@ public class TwilioSmsClient(
                 message.PhoneNumber);
             throw;
         }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Unexpected error while sending SMS via Twilio. To: {To}",
+                message.PhoneNumber);
+            throw;
+        }
 
         logger.LogInformation(
             "SMS sent successfully via Twilio. To: {To}",
