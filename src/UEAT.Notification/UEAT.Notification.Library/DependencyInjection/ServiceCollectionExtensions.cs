@@ -46,7 +46,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<INotificationSender, NotificationSender>();
         services.AddLocalization();
         services.AddValidatorsFromAssemblyContaining<WelcomeSmsNotificationValidator>();
-        services.AddSingleton<WebhookHandler>();
 
         return builder;
     }
@@ -75,7 +74,7 @@ public static class ServiceCollectionExtensions
                     .HandleTransientHttpError()
                     .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
-        builder.Services.AddSingleton<IChannelNotification, SmsChannelNotification>();
+        builder.Services.AddScoped<IChannelNotification, SmsChannelNotification>();
 
         return builder;
     }
@@ -113,8 +112,8 @@ public static class ServiceCollectionExtensions
             );
         });
 
-        builder.Services.AddSingleton<ISmsClient, TwilioSmsClient>();
-        builder.Services.AddSingleton<IChannelNotification, SmsChannelNotification>();
+        builder.Services.AddScoped<ISmsClient, TwilioSmsClient>();
+        builder.Services.AddScoped<IChannelNotification, SmsChannelNotification>();
 
         return builder;
     }
@@ -134,20 +133,20 @@ public static class ServiceCollectionExtensions
             options.ApiKey = config.ApiKey;
         });
 
-        builder.Services.AddSingleton<IEmailClient, SendGridEmailClient>();
-        builder.Services.AddSingleton<IChannelNotification, EmailChannelNotification>();
+        builder.Services.AddScoped<IEmailClient, SendGridEmailClient>();
+        builder.Services.AddScoped<IChannelNotification, EmailChannelNotification>();
 
         return builder;
     }
 
-    public static void MapNotificationWebhook(this WebApplication app)
+    public static void MapNotificationWebhook(this WebApplication app, IWebhookHandler handler)
     {
         app.MapPost("folio/webhook/incoming_sms",
-            async (HttpRequest request, [FromServices] WebhookHandler webhookHandler) =>
+            async (HttpRequest request) =>
             {
                 try
                 {
-                    await webhookHandler.Handle(request).ConfigureAwait(false);
+                    await handler.HandleAsync(request).ConfigureAwait(false);
                     return Results.Ok();
                 }
                 catch (Exception ex)

@@ -3,6 +3,7 @@ using UEAT.Notification.Core;
 using UEAT.Notification.Core.ValueObjects;
 using UEAT.Notification.Library.DependencyInjection;
 using UEAT.Notification.Library.SMS.Welcome;
+using UEAT.Notification.Library.Webhooks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +14,11 @@ builder.Services
     .AddFolioSmsProvider()
     .AddSendGridEmailProvider();
 
+builder.Services.AddSingleton<IWebhookHandler, WebhookHandler>();
+
 var app = builder.Build();
 
-app.MapNotificationWebhook();
+app.MapNotificationWebhook(app.Services.GetRequiredService<IWebhookHandler>());
 
 if (app.Environment.IsDevelopment())
 {
@@ -50,3 +53,13 @@ app.Run();
 
 // Request DTOs
 public record SmsRequest(string PhoneNumber, string? Message, string? Language);
+
+public class WebhookHandler(ILogger<WebhookHandler> logger) : IWebhookHandler
+{
+    public async Task HandleAsync(HttpRequest request)
+    {
+        using var reader = new StreamReader(request.Body);
+        var body = await reader.ReadToEndAsync();
+        logger.LogInformation("Received webhook with body: {Body}", body);
+    }
+}

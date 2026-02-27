@@ -39,6 +39,11 @@ public sealed class NotificationSender(
 
             throw;
         }
+        
+        logger.LogInformation(
+            "Notification sent successfully via {SenderType}. Notification: {notification}",
+            channel.GetType().Name,
+            JsonSerializer.Serialize(notification));
     }
 
     private async Task ValidateAsync<T>(T notification, CancellationToken cancellationToken) where T : INotification
