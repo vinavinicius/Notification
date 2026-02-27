@@ -251,6 +251,7 @@ public class NotificationPipelineIntegrationTests : IDisposable
             channels: [channel],
             templateRenderers: [templateRenderer],
             validator: validator,
+            
             logger: NullLogger<NotificationSender>.Instance);
     }
     

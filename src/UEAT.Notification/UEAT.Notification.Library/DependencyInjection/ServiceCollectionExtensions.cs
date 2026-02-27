@@ -40,6 +40,10 @@ public static class ServiceCollectionExtensions
                 sp.GetRequiredService<IRazorLightEngine>(),
                 [typeof(NotificationLibraryServicesBuilder).Assembly]));
 
+        services.AddSingleton<NotificationChannel>();
+
+        services.AddHostedService<NotificationBackgroundService>();
+
         services.AddSingleton<INotificationValidator, FluentValidationNotificationValidator>();
         services.AddScoped<INotificationSender, NotificationSender>();
         services.AddLocalization();

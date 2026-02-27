@@ -30,11 +30,8 @@ public class NotificationSenderTests
             channels ?? [],
             renderers ?? [],
             validator ?? Mock.Of<INotificationValidator>(),
+            notificationChannel ?? _notificationChannel,
             NullLogger<NotificationSender>.Instance);
-
-    // -------------------------------------------------------------------------
-    // Channel resolution
-    // -------------------------------------------------------------------------
 
     [Fact]
     public async Task SendAsync_NoChannelRegistered_ThrowsInvalidOperationException()

@@ -8,7 +8,8 @@ namespace UEAT.Notification.Library;
 public class NotificationSender(
     IEnumerable<IChannelNotification> channels,
     IEnumerable<ITemplateRenderer> templateRenderers,
-    INotificationValidator validator, 
+    INotificationValidator validator,
+    NotificationChannel notificationChannel,
     ILogger<NotificationSender> logger)
     : INotificationSender
 {
@@ -39,17 +40,26 @@ public class NotificationSender(
         catch (Exception ex)
         {
             logger.LogError(ex,
-                "Failed to send notification via {SenderType}. Notification: {notification}",
+                "Failed to send notification via {ChannelType}. Notification: {Notification}",
                 channel.GetType().Name,
                 SerializeNotification(notification));
-
             throw;
         }
 
         logger.LogInformation(
-            "Notification sent successfully via {SenderType}. Notification: {notification}",
+            "Notification sent successfully via {ChannelType}. Notification: {Notification}",
             channel.GetType().Name,
             SerializeNotification(notification));
+    }
+
+    public void Send(INotification notification)
+    {
+        if (!notificationChannel.Writer.TryWrite(notification))
+        {
+            logger.LogWarning(
+                "Failed to enqueue notification {NotificationType}. Channel may be closed.",
+                notification.GetType().Name);
+        }
     }
 
     private async Task<string> RenderContentAsync(INotification notification)
@@ -64,9 +74,7 @@ public class NotificationSender(
 
         return await templateRenderer.RenderAsync(notification);
     }
-    
-    private static string SerializeNotification(INotification notification)
-    {
-        return JsonSerializer.Serialize(notification, JsonSerializerOptions);
-    }
+
+    private static string SerializeNotification(INotification notification) =>
+        JsonSerializer.Serialize(notification, JsonSerializerOptions);
 }
