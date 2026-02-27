@@ -18,7 +18,7 @@ public class RazorTemplateRendererTests
 
         var renderer = new RazorTemplateRenderer(
             engineMock.Object,
-            [typeof(Library.SMS.Welcome.WelcomeSmsNotification).Assembly]);
+            [typeof(SMS.Welcome.WelcomeSmsNotification).Assembly]);
 
         var notificationMock = new Mock<INotification>();
         notificationMock
@@ -36,7 +36,7 @@ public class RazorTemplateRendererTests
         var engineMock = new Mock<IRazorLightEngine>();
         var renderer = new RazorTemplateRenderer(
             engineMock.Object,
-            [typeof(Library.SMS.Welcome.WelcomeSmsNotification).Assembly]);
+            [typeof(SMS.Welcome.WelcomeSmsNotification).Assembly]);
 
         var notificationMock = new Mock<INotification>();
         notificationMock
