@@ -1,7 +1,3 @@
-using System;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -11,10 +7,9 @@ using UEAT.Notification.Infrastructure.Configurations;
 using UEAT.Notification.Infrastructure.Email.SendGrid;
 using WireMock.RequestBuilders;
 using WireMock.Server;
-using Xunit;
 using Response = WireMock.ResponseBuilders.Response;
 
-namespace UEAT.Notification.Library.Tests.Infrastructure.Clients;
+namespace UEAT.Notification.Tests.Infrastructure.Clients;
 
 public class SendGridEmailClientTests : IDisposable
 {

@@ -8,7 +8,7 @@ using UEAT.Notification.Core.ValueObjects;
 using UEAT.Notification.Library;
 using UEAT.Notification.Library.SMS.Welcome;
 
-namespace UEAT.Notification.Tests.ChannelNotifications;
+namespace UEAT.Notification.Tests.Library.ChannelNotifications;
 
 public class SmsChannelNotificationTests
 {
