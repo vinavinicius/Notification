@@ -20,11 +20,11 @@ using Response = WireMock.ResponseBuilders.Response;
 
 namespace UEAT.Notification.Tests;
 
-public class NotificationPipelineIntegrationTests : IDisposable
+public class NotificationEndToEndIntegrationTests : IDisposable
 {
     private readonly WireMockServer _server;
 
-    public NotificationPipelineIntegrationTests()
+    public NotificationEndToEndIntegrationTests()
     {
         _server = WireMockServer.Start();
     }
@@ -32,7 +32,6 @@ public class NotificationPipelineIntegrationTests : IDisposable
     [Fact]
     public async Task SmsPipeline_EnglishNotification_RendersAndSendsCorrectContent()
     {
-        // Arrange
         _server
             .Given(Request.Create().WithPath("/send").UsingPost())
             .RespondWith(Response.Create().WithStatusCode(200).WithBody("OK"));
@@ -45,7 +44,6 @@ public class NotificationPipelineIntegrationTests : IDisposable
             Message = "Hello World"
         };
 
-        // Act
         await sender.SendAsync(notification);
         
         var logEntry = _server.LogEntries.Should().ContainSingle().Subject;
@@ -57,7 +55,6 @@ public class NotificationPipelineIntegrationTests : IDisposable
     [Fact]
     public async Task SmsPipeline_FrenchNotification_RendersLocalizedContent()
     {
-        // Arrange
         _server
             .Given(Request.Create().WithPath("/send").UsingPost())
             .RespondWith(Response.Create().WithStatusCode(200).WithBody("OK"));
@@ -70,7 +67,6 @@ public class NotificationPipelineIntegrationTests : IDisposable
             Message = "Monde"
         };
 
-        // Act
         await sender.SendAsync(notification);
         
         var logEntry = _server.LogEntries.Should().ContainSingle().Subject;
@@ -82,7 +78,6 @@ public class NotificationPipelineIntegrationTests : IDisposable
     [Fact]
     public async Task SmsPipeline_CorrectPhoneNumber_IsSentToProvider()
     {
-        // Arrange
         _server
             .Given(Request.Create().WithPath("/send").UsingPost())
             .RespondWith(Response.Create().WithStatusCode(200).WithBody("OK"));
@@ -95,7 +90,6 @@ public class NotificationPipelineIntegrationTests : IDisposable
             Message = "Test"
         };
 
-        // Act
         await sender.SendAsync(notification);
         
         var body = _server.LogEntries.Single().RequestMessage.Body!;
@@ -113,10 +107,8 @@ public class NotificationPipelineIntegrationTests : IDisposable
             Message = string.Empty
         };
 
-        // Act
         var act = async () => await sender.SendAsync(invalidNotification);
 
-        // Assert
         await act.Should().ThrowAsync<FluentValidation.ValidationException>();
 
         _server.LogEntries.Should().BeEmpty();
@@ -125,7 +117,6 @@ public class NotificationPipelineIntegrationTests : IDisposable
     [Fact]
     public async Task SmsPipeline_ProviderReturns500_ThrowsAndDoesNotSwallow()
     {
-        // Arrange
         _server
             .Given(Request.Create().WithPath("/send").UsingPost())
             .RespondWith(Response.Create().WithStatusCode(500).WithBody("Internal Server Error"));
@@ -138,10 +129,8 @@ public class NotificationPipelineIntegrationTests : IDisposable
             Message = "Test"
         };
 
-        // Act
         var act = async () => await sender.SendAsync(notification);
 
-        // Assert 
         await act.Should().ThrowAsync<HttpRequestException>()
             .WithMessage("*500*");
     }
@@ -149,7 +138,6 @@ public class NotificationPipelineIntegrationTests : IDisposable
     [Fact]
     public async Task EmailPipeline_EnglishNotification_RendersAndSendsCorrectContent()
     {
-        // Arrange
         _server
             .Given(Request.Create().WithPath("/v3/mail/send").UsingPost())
             .RespondWith(Response.Create().WithStatusCode(202));
@@ -160,7 +148,6 @@ public class NotificationPipelineIntegrationTests : IDisposable
             new EmailAddress("user@example.com"),
             subject: "Welcome!");
 
-        // Act
         await sender.SendAsync(notification);
         
         var body = _server.LogEntries.Should().ContainSingle().Subject.RequestMessage.Body!;
@@ -172,9 +159,6 @@ public class NotificationPipelineIntegrationTests : IDisposable
     [Fact]
     public async Task EmailPipeline_FrenchNotification_RendersLocalizedContent()
     {
-        // Arrange
-        string? capturedBody = null;
-
         _server
             .Given(Request.Create().WithPath("/v3/mail/send").UsingPost())
             .RespondWith(Response.Create().WithStatusCode(202));
@@ -185,10 +169,9 @@ public class NotificationPipelineIntegrationTests : IDisposable
             new EmailAddress("utilisateur@exemple.com"),
             subject: "Bienvenue!");
 
-        // Act
         await sender.SendAsync(notification);
         
-        capturedBody = _server.LogEntries.Single().RequestMessage.Body!;
+        var capturedBody = _server.LogEntries.Single().RequestMessage.Body!;
         capturedBody.Should().Contain("Bienvenue");
     }
 
@@ -201,10 +184,8 @@ public class NotificationPipelineIntegrationTests : IDisposable
             new EmailAddress("user@example.com"),
             subject: string.Empty);
 
-        // Act
         var act = async () => await sender.SendAsync(invalidNotification);
 
-        // Assert
         await act.Should().ThrowAsync<FluentValidation.ValidationException>();
         _server.LogEntries.Should().BeEmpty();
     }
@@ -218,10 +199,8 @@ public class NotificationPipelineIntegrationTests : IDisposable
             new EmailAddress("user@example.com"),
             subject: "Hello");
 
-        // Act
         var act = async () => await sender.SendAsync(emailNotification);
 
-        // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*No channel registered*");
     }
@@ -246,12 +225,13 @@ public class NotificationPipelineIntegrationTests : IDisposable
 
         var validator = new FluentValidationNotificationValidator(sp);
         var channel = new SmsChannelNotification(smsClient);
+        var notificationChannel = new NotificationChannel();
 
         return new NotificationSender(
             channels: [channel],
             templateRenderers: [templateRenderer],
             validator: validator,
-            
+            notificationChannel: notificationChannel,
             logger: NullLogger<NotificationSender>.Instance);
     }
     
@@ -290,11 +270,13 @@ public class NotificationPipelineIntegrationTests : IDisposable
 
         var validator = new FluentValidationNotificationValidator(sp);
         var channel = new EmailChannelNotification(emailClient);
+        var notificationChannel = new NotificationChannel();
 
         return new NotificationSender(
             channels: [channel],
             templateRenderers: [templateRenderer],
             validator: validator,
+            notificationChannel: notificationChannel,
             logger: NullLogger<NotificationSender>.Instance);
     }
 

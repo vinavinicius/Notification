@@ -5,7 +5,7 @@ using UEAT.Notification.Core;
 
 namespace UEAT.Notification.Library;
 
-public sealed class NotificationBackgroundService(
+public class NotificationBackgroundService(
     NotificationChannel notificationChannel,
     IServiceScopeFactory scopeFactory,
     ILogger<NotificationBackgroundService> logger) : BackgroundService

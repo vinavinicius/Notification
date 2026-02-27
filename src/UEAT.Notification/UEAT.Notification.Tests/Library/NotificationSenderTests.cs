@@ -15,6 +15,7 @@ public class NotificationSenderTests
     private readonly Mock<IChannelNotification> _channelMock = new();
     private readonly Mock<ITemplateRenderer> _rendererMock = new();
     private readonly Mock<INotificationValidator> _validatorMock = new();
+    private readonly NotificationChannel _notificationChannel = new();
 
     private static WelcomeSmsNotification ValidNotification() =>
         new(CultureInfo.GetCultureInfo("en-CA"), new MobilePhone("1", "581", "5551234"))
@@ -30,7 +31,7 @@ public class NotificationSenderTests
             channels ?? [],
             renderers ?? [],
             validator ?? Mock.Of<INotificationValidator>(),
-            notificationChannel ?? _notificationChannel,
+            _notificationChannel,
             NullLogger<NotificationSender>.Instance);
 
     [Fact]
@@ -56,11 +57,7 @@ public class NotificationSenderTests
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*No channel registered*");
     }
-
-    // -------------------------------------------------------------------------
-    // Template renderer resolution
-    // -------------------------------------------------------------------------
-
+    
     [Fact]
     public async Task SendAsync_NoRendererRegistered_ThrowsInvalidOperationException()
     {
@@ -87,11 +84,7 @@ public class NotificationSenderTests
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*No template renderer*");
     }
-
-    // -------------------------------------------------------------------------
-    // Validation
-    // -------------------------------------------------------------------------
-
+    
     [Fact]
     public async Task SendAsync_ValidationFails_ThrowsValidationException()
     {
@@ -153,11 +146,7 @@ public class NotificationSenderTests
             x => x.ValidateAsync(notification, It.IsAny<CancellationToken>()),
             Times.Once);
     }
-
-    // -------------------------------------------------------------------------
-    // Happy path
-    // -------------------------------------------------------------------------
-
+    
     [Fact]
     public async Task SendAsync_HappyPath_DoesNotThrow()
     {
@@ -211,11 +200,7 @@ public class NotificationSenderTests
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
-
-    // -------------------------------------------------------------------------
-    // Error propagation
-    // -------------------------------------------------------------------------
-
+    
     [Fact]
     public async Task SendAsync_ChannelThrows_ExceptionIsPropagated()
     {
@@ -287,10 +272,6 @@ public class NotificationSenderTests
             Times.Once);
     }
 
-    // -------------------------------------------------------------------------
-    // Cancellation
-    // -------------------------------------------------------------------------
-
     [Fact]
     public async Task SendAsync_CancellationRequested_ThrowsOperationCanceledException()
     {
@@ -320,11 +301,7 @@ public class NotificationSenderTests
 
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
-
-    // -------------------------------------------------------------------------
-    // Multiple channels
-    // -------------------------------------------------------------------------
-
+    
     [Fact]
     public async Task SendAsync_MultipleChannels_UsesFirstMatchingChannel()
     {
@@ -353,10 +330,6 @@ public class NotificationSenderTests
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
-
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
 
     private void SetupChannelAndRenderer(string renderedContent)
     {
