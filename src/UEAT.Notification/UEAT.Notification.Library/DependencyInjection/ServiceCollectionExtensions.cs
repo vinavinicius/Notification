@@ -41,7 +41,7 @@ public static class ServiceCollectionExtensions
                 [typeof(NotificationLibraryServicesBuilder).Assembly]));
 
         services.AddSingleton<INotificationValidator, FluentValidationNotificationValidator>();
-        services.AddScoped<INotificationSender, NotificationSender>();
+        services.AddSingleton<INotificationSender, NotificationSender>();
         services.AddLocalization();
         services.AddValidatorsFromAssemblyContaining<WelcomeSmsNotificationValidator>();
 

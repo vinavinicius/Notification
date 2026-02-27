@@ -7,8 +7,6 @@ using UEAT.Notification.Library.Webhooks;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var libraryAssembly = typeof(WelcomeSmsNotification).Assembly;
-
 builder.Services
     .AddNotificationLibrary(builder.Configuration)
     .AddFolioSmsProvider()
