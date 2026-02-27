@@ -53,7 +53,7 @@ public class NotificationSenderTests
         rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
         rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync("content");
 
-        var validatorMock = new Mock<INotificationValidator>();
+        var validatorMock = new Mock<FluentValidationNotificationValidator>();
         validatorMock
             .Setup(x => x.ValidateAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ValidationException("Always fails."));
@@ -85,7 +85,7 @@ public class NotificationSenderTests
         rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
         rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync("content");
 
-        var validatorMock = new Mock<INotificationValidator>();
+        var validatorMock = new Mock<FluentValidationNotificationValidator>();
         validatorMock
             .Setup(x => x.ValidateAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ValidationException("Always fails."));
@@ -121,7 +121,7 @@ public class NotificationSenderTests
         rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
         rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync("content");
 
-        var validatorMock = new Mock<INotificationValidator>();
+        var validatorMock = new Mock<FluentValidationNotificationValidator>();
         validatorMock
             .Setup(x => x.ValidateAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -155,7 +155,7 @@ public class NotificationSenderTests
         rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
         rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync(renderedContent);
 
-        var validatorMock = new Mock<INotificationValidator>();
+        var validatorMock = new Mock<FluentValidationNotificationValidator>();
         validatorMock
             .Setup(x => x.ValidateAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -191,7 +191,7 @@ public class NotificationSenderTests
         rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
         rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync("content");
 
-        var validatorMock = new Mock<INotificationValidator>();
+        var validatorMock = new Mock<FluentValidationNotificationValidator>();
         validatorMock
             .Setup(x => x.ValidateAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -212,11 +212,11 @@ public class NotificationSenderTests
     private NotificationSender BuildSender(
         IEnumerable<IChannelNotification>? channels = null,
         IEnumerable<ITemplateRenderer>? renderers = null,
-        INotificationValidator? validator = null)
+        FluentValidationNotificationValidator? validator = null)
     {
         channels ??= [];
         renderers ??= [];
-        validator ??= Mock.Of<INotificationValidator>();
+        validator ??= Mock.Of<FluentValidationNotificationValidator>();
 
         return new NotificationSender(
             channels,
