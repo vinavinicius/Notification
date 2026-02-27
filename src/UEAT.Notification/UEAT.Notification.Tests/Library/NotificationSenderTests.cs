@@ -12,92 +12,123 @@ namespace UEAT.Notification.Tests.Library;
 
 public class NotificationSenderTests
 {
+    private readonly Mock<IChannelNotification> _channelMock = new();
+    private readonly Mock<ITemplateRenderer> _rendererMock = new();
+    private readonly Mock<INotificationValidator> _validatorMock = new();
+
     private static WelcomeSmsNotification ValidNotification() =>
         new(CultureInfo.GetCultureInfo("en-CA"), new MobilePhone("1", "581", "5551234"))
         {
             Message = "Welcome!"
         };
 
+    private NotificationSender BuildSender(
+        IEnumerable<IChannelNotification>? channels = null,
+        IEnumerable<ITemplateRenderer>? renderers = null,
+        INotificationValidator? validator = null) =>
+        new(
+            channels ?? [],
+            renderers ?? [],
+            validator ?? Mock.Of<INotificationValidator>(),
+            NullLogger<NotificationSender>.Instance);
+
+    // -------------------------------------------------------------------------
+    // Channel resolution
+    // -------------------------------------------------------------------------
+
     [Fact]
-    public async Task SendAsync_NoChannelRegistered_ShouldThrowInvalidOperationException()
+    public async Task SendAsync_NoChannelRegistered_ThrowsInvalidOperationException()
     {
         var sender = BuildSender();
 
-        var act = async () => await sender.SendAsync(ValidNotification());
+        var act = () => sender.SendAsync(ValidNotification());
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*No channel registered*");
     }
 
     [Fact]
-    public async Task SendAsync_NoRendererRegistered_ShouldThrowInvalidOperationException()
+    public async Task SendAsync_ChannelCannotHandleNotification_ThrowsInvalidOperationException()
     {
-        var channelMock = new Mock<IChannelNotification>();
-        channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
+        _channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(false);
 
-        var sender = BuildSender(channels: [channelMock.Object]);
+        var sender = BuildSender(channels: [_channelMock.Object]);
 
-        var act = async () => await sender.SendAsync(ValidNotification());
+        var act = () => sender.SendAsync(ValidNotification());
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*No channel registered*");
+    }
+
+    // -------------------------------------------------------------------------
+    // Template renderer resolution
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task SendAsync_NoRendererRegistered_ThrowsInvalidOperationException()
+    {
+        _channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
+
+        var sender = BuildSender(channels: [_channelMock.Object]);
+
+        var act = () => sender.SendAsync(ValidNotification());
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*No template renderer*");
     }
 
     [Fact]
-    public async Task SendAsync_ValidationFails_ShouldThrowValidationException()
+    public async Task SendAsync_RendererCannotRender_ThrowsInvalidOperationException()
     {
-        var channelMock = new Mock<IChannelNotification>();
-        channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
+        _channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
+        _rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(false);
 
-        var rendererMock = new Mock<ITemplateRenderer>();
-        rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
-        rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync("content");
+        var sender = BuildSender(channels: [_channelMock.Object], renderers: [_rendererMock.Object]);
 
-        var validatorMock = new Mock<FluentValidationNotificationValidator>();
-        validatorMock
+        var act = () => sender.SendAsync(ValidNotification());
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*No template renderer*");
+    }
+
+    // -------------------------------------------------------------------------
+    // Validation
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task SendAsync_ValidationFails_ThrowsValidationException()
+    {
+        SetupChannelAndRenderer("content");
+        _validatorMock
             .Setup(x => x.ValidateAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new ValidationException("Always fails."));
+            .ThrowsAsync(new ValidationException("Validation failed."));
 
         var sender = BuildSender(
-            channels: [channelMock.Object],
-            renderers: [rendererMock.Object],
-            validator: validatorMock.Object);
+            channels: [_channelMock.Object],
+            renderers: [_rendererMock.Object],
+            validator: _validatorMock.Object);
 
-        var invalidNotification = new WelcomeSmsNotification(
-            CultureInfo.GetCultureInfo("en-CA"),
-            new MobilePhone("1", "581", "5551234"))
-        {
-            Message = string.Empty
-        };
-
-        var act = async () => await sender.SendAsync(invalidNotification);
+        var act = () => sender.SendAsync(ValidNotification());
 
         await act.Should().ThrowAsync<ValidationException>();
     }
 
     [Fact]
-    public async Task SendAsync_ValidationFails_ShouldNotCallChannel()
+    public async Task SendAsync_ValidationFails_DoesNotCallChannel()
     {
-        var channelMock = new Mock<IChannelNotification>();
-        channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
-
-        var rendererMock = new Mock<ITemplateRenderer>();
-        rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
-        rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync("content");
-
-        var validatorMock = new Mock<FluentValidationNotificationValidator>();
-        validatorMock
+        SetupChannelAndRenderer("content");
+        _validatorMock
             .Setup(x => x.ValidateAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new ValidationException("Always fails."));
+            .ThrowsAsync(new ValidationException("Validation failed."));
 
         var sender = BuildSender(
-            channels: [channelMock.Object],
-            renderers: [rendererMock.Object],
-            validator: validatorMock.Object);
+            channels: [_channelMock.Object],
+            renderers: [_rendererMock.Object],
+            validator: _validatorMock.Object);
 
         try { await sender.SendAsync(ValidNotification()); } catch { /* expected */ }
 
-        channelMock.Verify(
+        _channelMock.Verify(
             x => x.SendNotificationAsync(
                 It.IsAny<INotification>(),
                 It.IsAny<string>(),
@@ -106,68 +137,57 @@ public class NotificationSenderTests
     }
 
     [Fact]
-    public async Task SendAsync_ChannelThrows_ShouldRethrowException()
+    public async Task SendAsync_HappyPath_ValidatorCalledExactlyOnce()
     {
-        var channelMock = new Mock<IChannelNotification>();
-        channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
-        channelMock
-            .Setup(x => x.SendNotificationAsync(
-                It.IsAny<INotification>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new HttpRequestException("Provider unavailable"));
-
-        var rendererMock = new Mock<ITemplateRenderer>();
-        rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
-        rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync("content");
-
-        var validatorMock = new Mock<FluentValidationNotificationValidator>();
-        validatorMock
+        var notification = ValidNotification();
+        SetupChannelAndRenderer("content");
+        _validatorMock
             .Setup(x => x.ValidateAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var sender = BuildSender(
-            channels: [channelMock.Object],
-            renderers: [rendererMock.Object],
-            validator: validatorMock.Object);
+            channels: [_channelMock.Object],
+            renderers: [_rendererMock.Object],
+            validator: _validatorMock.Object);
 
-        var act = async () => await sender.SendAsync(ValidNotification());
+        await sender.SendAsync(notification);
 
-        await act.Should().ThrowAsync<HttpRequestException>()
-            .WithMessage("*Provider unavailable*");
+        _validatorMock.Verify(
+            x => x.ValidateAsync(notification, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    // -------------------------------------------------------------------------
+    // Happy path
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task SendAsync_HappyPath_DoesNotThrow()
+    {
+        SetupChannelAndRenderer("content");
+
+        var sender = BuildSender(
+            channels: [_channelMock.Object],
+            renderers: [_rendererMock.Object]);
+
+        var act = () => sender.SendAsync(ValidNotification());
+
+        await act.Should().NotThrowAsync();
     }
 
     [Fact]
-    public async Task SendAsync_HappyPath_ShouldCallChannelWithRenderedContent()
+    public async Task SendAsync_HappyPath_ChannelReceivesRenderedContent()
     {
         const string renderedContent = "Welcome! Your message here.";
-
-        var channelMock = new Mock<IChannelNotification>();
-        channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
-        channelMock
-            .Setup(x => x.SendNotificationAsync(
-                It.IsAny<INotification>(),
-                renderedContent,
-                It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        var rendererMock = new Mock<ITemplateRenderer>();
-        rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
-        rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync(renderedContent);
-
-        var validatorMock = new Mock<FluentValidationNotificationValidator>();
-        validatorMock
-            .Setup(x => x.ValidateAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        SetupChannelAndRenderer(renderedContent);
 
         var sender = BuildSender(
-            channels: [channelMock.Object],
-            renderers: [rendererMock.Object],
-            validator: validatorMock.Object);
+            channels: [_channelMock.Object],
+            renderers: [_rendererMock.Object]);
 
         await sender.SendAsync(ValidNotification());
 
-        channelMock.Verify(
+        _channelMock.Verify(
             x => x.SendNotificationAsync(
                 It.IsAny<INotification>(),
                 renderedContent,
@@ -176,52 +196,182 @@ public class NotificationSenderTests
     }
 
     [Fact]
-    public async Task SendAsync_HappyPath_ShouldCallValidatorOnce()
+    public async Task SendAsync_HappyPath_PassesCorrectNotificationToChannel()
     {
-        var channelMock = new Mock<IChannelNotification>();
-        channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
-        channelMock
+        var notification = ValidNotification();
+        SetupChannelAndRenderer("content");
+
+        var sender = BuildSender(
+            channels: [_channelMock.Object],
+            renderers: [_rendererMock.Object]);
+
+        await sender.SendAsync(notification);
+
+        _channelMock.Verify(
+            x => x.SendNotificationAsync(
+                notification,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    // -------------------------------------------------------------------------
+    // Error propagation
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task SendAsync_ChannelThrows_ExceptionIsPropagated()
+    {
+        _channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
+        _channelMock
+            .Setup(x => x.SendNotificationAsync(
+                It.IsAny<INotification>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("Provider unavailable"));
+
+        _rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
+        _rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync("content");
+
+        var sender = BuildSender(
+            channels: [_channelMock.Object],
+            renderers: [_rendererMock.Object]);
+
+        var act = () => sender.SendAsync(ValidNotification());
+
+        await act.Should().ThrowAsync<HttpRequestException>()
+            .WithMessage("*Provider unavailable*");
+    }
+
+    [Fact]
+    public async Task SendAsync_RendererThrows_ExceptionIsPropagated()
+    {
+        _channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
+        _rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
+        _rendererMock
+            .Setup(x => x.RenderAsync(It.IsAny<INotification>()))
+            .ThrowsAsync(new InvalidOperationException("Template compilation failed"));
+
+        var sender = BuildSender(
+            channels: [_channelMock.Object],
+            renderers: [_rendererMock.Object]);
+
+        var act = () => sender.SendAsync(ValidNotification());
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Template compilation failed*");
+    }
+
+    [Fact]
+    public async Task SendAsync_ChannelThrows_ChannelIsCalledOnlyOnce()
+    {
+        _channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
+        _channelMock
+            .Setup(x => x.SendNotificationAsync(
+                It.IsAny<INotification>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("Provider unavailable"));
+
+        _rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
+        _rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync("content");
+
+        var sender = BuildSender(
+            channels: [_channelMock.Object],
+            renderers: [_rendererMock.Object]);
+
+        try { await sender.SendAsync(ValidNotification()); } catch { /* expected */ }
+
+        _channelMock.Verify(
+            x => x.SendNotificationAsync(
+                It.IsAny<INotification>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    // -------------------------------------------------------------------------
+    // Cancellation
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task SendAsync_CancellationRequested_ThrowsOperationCanceledException()
+    {
+        _channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
+        _channelMock
+            .Setup(x => x.SendNotificationAsync(
+                It.IsAny<INotification>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .Returns((INotification _, string _, CancellationToken ct) =>
+            {
+                ct.ThrowIfCancellationRequested();
+                return Task.CompletedTask;
+            });
+
+        _rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
+        _rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync("content");
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        var sender = BuildSender(
+            channels: [_channelMock.Object],
+            renderers: [_rendererMock.Object]);
+
+        var act = () => sender.SendAsync(ValidNotification(), cts.Token);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    // -------------------------------------------------------------------------
+    // Multiple channels
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task SendAsync_MultipleChannels_UsesFirstMatchingChannel()
+    {
+        var nonMatchingChannel = new Mock<IChannelNotification>();
+        nonMatchingChannel.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(false);
+
+        SetupChannelAndRenderer("content");
+
+        var sender = BuildSender(
+            channels: [nonMatchingChannel.Object, _channelMock.Object],
+            renderers: [_rendererMock.Object]);
+
+        await sender.SendAsync(ValidNotification());
+
+        nonMatchingChannel.Verify(
+            x => x.SendNotificationAsync(
+                It.IsAny<INotification>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        _channelMock.Verify(
+            x => x.SendNotificationAsync(
+                It.IsAny<INotification>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    private void SetupChannelAndRenderer(string renderedContent)
+    {
+        _channelMock.Setup(x => x.CanHandle(It.IsAny<INotification>())).Returns(true);
+        _channelMock
             .Setup(x => x.SendNotificationAsync(
                 It.IsAny<INotification>(),
                 It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var rendererMock = new Mock<ITemplateRenderer>();
-        rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
-        rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync("content");
-
-        var validatorMock = new Mock<FluentValidationNotificationValidator>();
-        validatorMock
-            .Setup(x => x.ValidateAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        var notification = ValidNotification();
-        var sender = BuildSender(
-            channels: [channelMock.Object],
-            renderers: [rendererMock.Object],
-            validator: validatorMock.Object);
-
-        await sender.SendAsync(notification);
-
-        validatorMock.Verify(
-            x => x.ValidateAsync(notification, It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    private NotificationSender BuildSender(
-        IEnumerable<IChannelNotification>? channels = null,
-        IEnumerable<ITemplateRenderer>? renderers = null,
-        FluentValidationNotificationValidator? validator = null)
-    {
-        channels ??= [];
-        renderers ??= [];
-        validator ??= Mock.Of<FluentValidationNotificationValidator>();
-
-        return new NotificationSender(
-            channels,
-            renderers,
-            validator,
-            NullLogger<NotificationSender>.Instance);
+        _rendererMock.Setup(x => x.CanRender(It.IsAny<INotification>())).Returns(true);
+        _rendererMock.Setup(x => x.RenderAsync(It.IsAny<INotification>())).ReturnsAsync(renderedContent);
     }
 }

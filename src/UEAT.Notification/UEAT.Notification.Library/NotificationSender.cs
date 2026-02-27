@@ -8,7 +8,7 @@ namespace UEAT.Notification.Library;
 public class NotificationSender(
     IEnumerable<IChannelNotification> channels,
     IEnumerable<ITemplateRenderer> templateRenderers,
-    FluentValidationNotificationValidator validator, 
+    INotificationValidator validator, 
     ILogger<NotificationSender> logger)
     : INotificationSender
 {

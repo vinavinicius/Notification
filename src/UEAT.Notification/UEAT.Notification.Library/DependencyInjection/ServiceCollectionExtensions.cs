@@ -40,7 +40,7 @@ public static class ServiceCollectionExtensions
                 sp.GetRequiredService<IRazorLightEngine>(),
                 [typeof(NotificationLibraryServicesBuilder).Assembly]));
 
-        services.AddScoped<FluentValidationNotificationValidator>();
+        services.AddSingleton<INotificationValidator, FluentValidationNotificationValidator>();
         services.AddScoped<INotificationSender, NotificationSender>();
         services.AddLocalization();
         services.AddValidatorsFromAssemblyContaining<WelcomeSmsNotificationValidator>();
@@ -66,11 +66,11 @@ public static class ServiceCollectionExtensions
             .AddPolicyHandler(
                 HttpPolicyExtensions
                     .HandleTransientHttpError()
-                    .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)))
+                    .WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
             .AddPolicyHandler(
                 HttpPolicyExtensions
                     .HandleTransientHttpError()
-                    .WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
+                    .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
         builder.Services.AddScoped<IChannelNotification, SmsChannelNotification>();
 
@@ -90,17 +90,16 @@ public static class ServiceCollectionExtensions
             {
                 var config = sp.GetRequiredService<IOptions<SendGridConfigurations>>().Value;
                 options.ApiKey = config.ApiKey;
-            })
+            }).AddPolicyHandler(
+                HttpPolicyExtensions
+                    .HandleTransientHttpError()
+                    .WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)))
+            )
             .AddPolicyHandler(
                 HttpPolicyExtensions
                     .HandleTransientHttpError()
                     .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30))
-            ).AddPolicyHandler(
-                HttpPolicyExtensions
-                    .HandleTransientHttpError()
-                    .WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)))
             );
-
 
         builder.Services.AddScoped<IEmailClient, SendGridEmailClient>();
         builder.Services.AddScoped<IChannelNotification, EmailChannelNotification>();
