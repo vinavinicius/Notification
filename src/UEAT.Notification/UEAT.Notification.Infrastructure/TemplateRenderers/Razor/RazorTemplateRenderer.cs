@@ -1,17 +1,34 @@
+using System.Reflection;
 using System.Resources;
 using RazorLight;
 using UEAT.Notification.Core;
 
 namespace UEAT.Notification.Infrastructure.TemplateRenderers.Razor;
 
-public class RazorTemplateRenderer(IRazorLightEngine razorLightEngine) : ITemplateRenderer
+public class RazorTemplateRenderer: ITemplateRenderer
 {
-    public TemplateRendererType RendererType => TemplateRendererType.Razor;
+    private readonly IRazorLightEngine _razorLightEngine;
+    private readonly HashSet<string> _embeddedTemplates;
+
+    public RazorTemplateRenderer(IRazorLightEngine razorLightEngine, IEnumerable<Assembly> assemblies)
+    {
+        _razorLightEngine = razorLightEngine;
+        
+        _embeddedTemplates = assemblies
+            .SelectMany(a => a.GetManifestResourceNames())
+            .Where(name => name.EndsWith(".cshtml"))
+            .ToHashSet(); 
+    }
+    
+    public bool CanRender(INotification notification)
+    {
+        return _embeddedTemplates.Contains(notification.Template);
+    }
 
     public async Task<string> RenderAsync(INotification notification)
     {
         var model = CreateTemplateModel(notification);
-        return await razorLightEngine.CompileRenderAsync(notification.Template, model);
+        return await _razorLightEngine.CompileRenderAsync(notification.Template, model);
     }
 
     private static RazorTemplateModel CreateTemplateModel(INotification notification)

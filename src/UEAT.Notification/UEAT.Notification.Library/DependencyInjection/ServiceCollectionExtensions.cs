@@ -19,7 +19,6 @@ using UEAT.Notification.Infrastructure.Configurations;
 using UEAT.Notification.Infrastructure.Email.SendGrid;
 using UEAT.Notification.Infrastructure.SMS.Folio;
 using UEAT.Notification.Infrastructure.SMS.Twilio;
-using UEAT.Notification.Infrastructure.TemplateRenderers;
 using UEAT.Notification.Infrastructure.TemplateRenderers.Razor;
 using UEAT.Notification.Library.SMS.Welcome;
 using UEAT.Notification.Library.Webhooks;
@@ -39,11 +38,13 @@ public static class ServiceCollectionExtensions
                 .UseEmbeddedResourcesProject(typeof(NotificationLibraryServicesBuilder).GetTypeInfo().Assembly)
                 .UseMemoryCachingProvider()
                 .Build());
+        
+        services.AddSingleton<ITemplateRenderer, RazorTemplateRenderer>(sp =>
+            new RazorTemplateRenderer(
+                sp.GetRequiredService<IRazorLightEngine>(),
+                [typeof(NotificationLibraryServicesBuilder).Assembly]));
 
-        services.AddSingleton<ITemplateRendererFactory, TemplateRendererFactory>();
-        services.AddSingleton<ITemplateRenderer, RazorTemplateRenderer>();
-
-        services.AddSingleton<INotificationSender, NotificationSender>();
+        services.AddScoped<INotificationSender, NotificationSender>();
         services.AddLocalization();
         services.AddValidatorsFromAssemblyContaining<WelcomeSmsNotificationValidator>();
 

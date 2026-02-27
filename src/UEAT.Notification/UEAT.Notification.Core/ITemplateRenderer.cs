@@ -2,6 +2,6 @@
 
 public interface ITemplateRenderer
 {
-    TemplateRendererType RendererType { get; }
+    bool CanRender(INotification notification);
     Task<string> RenderAsync(INotification notification);
 }

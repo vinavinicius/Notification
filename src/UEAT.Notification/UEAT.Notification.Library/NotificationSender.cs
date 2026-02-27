@@ -8,7 +8,7 @@ namespace UEAT.Notification.Library;
 
 public sealed class NotificationSender(
     IEnumerable<IChannelNotification> channels,
-    ITemplateRendererFactory templateRendererFactory,
+    IEnumerable<ITemplateRenderer> templateRenderers,
     IServiceProvider serviceProvider,
     ILogger<NotificationSender> logger)
     : INotificationSender
@@ -66,7 +66,14 @@ public sealed class NotificationSender(
 
     private async Task<string> RenderContentAsync(INotification notification)
     {
-        var templateRenderer = templateRendererFactory.Create(notification.TemplateRendererType);
+        var templateRenderer = templateRenderers.FirstOrDefault(s => s.CanRender(notification));
+        
+        if (templateRenderer is null)
+        {
+            throw new InvalidOperationException(
+                $"No template renderer registered for notification type: {notification.GetType().Name}");
+        }
+        
         return await templateRenderer.RenderAsync(notification);
     }
 }
