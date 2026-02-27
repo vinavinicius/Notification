@@ -1,6 +1,6 @@
 namespace UEAT.Notification.Library.Email.Welcome;
 
-internal class WelcomeEmailNotificationValidator : EmailNotificationValidatorBase<WelcomeEmailNotification>
+public class WelcomeEmailNotificationValidator : EmailNotificationValidatorBase<WelcomeEmailNotification>
 {
 
 }

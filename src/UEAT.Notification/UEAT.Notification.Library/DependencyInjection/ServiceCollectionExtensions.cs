@@ -38,7 +38,7 @@ public static class ServiceCollectionExtensions
                 .UseEmbeddedResourcesProject(typeof(NotificationLibraryServicesBuilder).GetTypeInfo().Assembly)
                 .UseMemoryCachingProvider()
                 .Build());
-        
+
         services.AddSingleton<ITemplateRenderer, RazorTemplateRenderer>(sp =>
             new RazorTemplateRenderer(
                 sp.GetRequiredService<IRazorLightEngine>(),
@@ -129,10 +129,19 @@ public static class ServiceCollectionExtensions
             .ValidateOnStart();
 
         builder.Services.AddSendGrid((sp, options) =>
-        {
-            var config = sp.GetRequiredService<IOptions<SendGridConfigurations>>().Value;
-            options.ApiKey = config.ApiKey;
-        });
+            {
+                var config = sp.GetRequiredService<IOptions<SendGridConfigurations>>().Value;
+                options.ApiKey = config.ApiKey;
+            }).AddPolicyHandler(
+                HttpPolicyExtensions
+                    .HandleTransientHttpError()
+                    .WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)))
+            )
+            .AddPolicyHandler(
+                HttpPolicyExtensions
+                    .HandleTransientHttpError()
+                    .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30))
+            );
 
         builder.Services.AddScoped<IEmailClient, SendGridEmailClient>();
         builder.Services.AddScoped<IChannelNotification, EmailChannelNotification>();

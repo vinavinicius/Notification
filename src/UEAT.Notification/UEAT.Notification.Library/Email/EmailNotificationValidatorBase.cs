@@ -3,7 +3,7 @@ using UEAT.Notification.Core.Email;
 
 namespace UEAT.Notification.Library.Email;
 
-internal abstract class EmailNotificationValidatorBase<T> : AbstractValidator<T>
+public abstract class EmailNotificationValidatorBase<T> : AbstractValidator<T>
     where T : IEmailNotification
 {
     protected EmailNotificationValidatorBase()

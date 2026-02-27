@@ -1,8 +1,5 @@
-using System.Net;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Polly;
-using Polly.Retry;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using UEAT.Notification.Core.Email;
@@ -22,10 +19,10 @@ public class SendGridEmailClient(
     {
         var from = new EmailAddress(_sendGridConfigurations.FromEmail, _sendGridConfigurations.FromName);
         var to = new EmailAddress(message.To);
-        var msg = MailHelper.CreateSingleEmail(from, to, message.Subject, plainTextContent: null, htmlContent: message.Content);
+        var msg = MailHelper.CreateSingleEmail(from, to, message.Subject, plainTextContent: null,
+            htmlContent: message.Content);
 
-        var response = await _retryPolicy.ExecuteAsync(async () =>
-            await sendGridClient.SendEmailAsync(msg, cancellationToken));
+        var response = await sendGridClient.SendEmailAsync(msg, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -46,29 +43,4 @@ public class SendGridEmailClient(
             message.To,
             (int)response.StatusCode);
     }
-
-    private static readonly HttpStatusCode[] RetryableStatusCodes =
-    [
-        HttpStatusCode.RequestTimeout,
-        HttpStatusCode.TooManyRequests,
-        HttpStatusCode.InternalServerError,
-        HttpStatusCode.BadGateway,
-        HttpStatusCode.ServiceUnavailable,
-        HttpStatusCode.GatewayTimeout
-    ];
-
-    private readonly AsyncRetryPolicy<Response> _retryPolicy = Policy<Response>
-        .HandleResult(r => RetryableStatusCodes.Contains(r.StatusCode))
-        .Or<HttpRequestException>()
-        .WaitAndRetryAsync(
-            retryCount: 3,
-            sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)),
-            onRetry: (outcome, timespan, attempt, _) =>
-            {
-                logger.LogWarning(
-                    "SendGrid API retry attempt {Attempt} after {Delay}s. StatusCode: {StatusCode}",
-                    attempt,
-                    timespan.TotalSeconds,
-                    outcome.Result?.StatusCode);
-            });
 }
