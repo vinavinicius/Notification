@@ -1,18 +1,13 @@
-using System;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using UEAT.Notification.Core.SMS;
 using UEAT.Notification.Infrastructure.SMS.Folio;
+using WireMock.RequestBuilders;
+using WireMock.ResponseBuilders;
 using WireMock.Server;
-using Xunit;
 using HttpClient = System.Net.Http.HttpClient;
-using Request = WireMock.RequestBuilders.Request;
-using Response = WireMock.ResponseBuilders.Response;
 
-namespace UEAT.Notification.Library.Tests.Infrastructure.Clients;
+namespace UEAT.Notification.Tests.Infrastructure.Clients;
 
 public class FolioSmsClientTests : IDisposable
 {
@@ -58,7 +53,7 @@ public class FolioSmsClientTests : IDisposable
             .Given(Request.Create()
                 .WithPath("/send")
                 .UsingPost()
-                .WithBody(b => b.Contains("to=%2B15815551234") && b.Contains("message=Welcome%21")))
+                .WithBody(b => b!.Contains("to=%2B15815551234") && b.Contains("message=Welcome%21")))
             .RespondWith(Response.Create()
                 .WithStatusCode(200));
 

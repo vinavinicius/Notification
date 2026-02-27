@@ -127,7 +127,7 @@ public class SendGridEmailClientTests : IDisposable
                 .WithPath("/v3/mail/send")
                 .UsingPost()
                 .WithBody(b =>
-                    b.Contains("user@example.com") &&
+                    b!.Contains("user@example.com") &&
                     b.Contains("Welcome Subject") &&
                     b.Contains("noreply@example.com")))
             .RespondWith(Response.Create()

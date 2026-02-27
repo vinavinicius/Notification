@@ -36,11 +36,7 @@ public class NotificationSender(
             logger.LogError(ex,
                 "Failed to send notification via {SenderType}. Notification: {notification}",
                 channel.GetType().Name,
-                JsonSerializer.Serialize(notification, new JsonSerializerOptions
-                {
-                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
-                    MaxDepth = 128
-                }));
+                SerializeNotification(notification));
 
             throw;
         }
@@ -48,11 +44,7 @@ public class NotificationSender(
         logger.LogInformation(
             "Notification sent successfully via {SenderType}. Notification: {notification}",
             channel.GetType().Name,
-            JsonSerializer.Serialize(notification, new JsonSerializerOptions
-            {
-                ReferenceHandler = ReferenceHandler.IgnoreCycles,
-                MaxDepth = 128
-            }));
+            SerializeNotification(notification));
     }
 
     private async Task ValidateAsync<T>(T notification, CancellationToken cancellationToken) where T : INotification
@@ -84,5 +76,14 @@ public class NotificationSender(
         }
 
         return await templateRenderer.RenderAsync(notification);
+    }
+    
+    private string SerializeNotification(INotification notification)
+    {
+        return JsonSerializer.Serialize(notification, new JsonSerializerOptions
+        {
+            ReferenceHandler = ReferenceHandler.IgnoreCycles,
+            MaxDepth = 128
+        });
     }
 }

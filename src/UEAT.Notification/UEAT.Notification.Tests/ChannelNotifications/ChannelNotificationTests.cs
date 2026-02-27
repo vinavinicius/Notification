@@ -1,18 +1,14 @@
-using System;
 using System.Globalization;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 using UEAT.Notification.Core;
 using UEAT.Notification.Core.Email;
 using UEAT.Notification.Core.SMS;
 using UEAT.Notification.Core.ValueObjects;
+using UEAT.Notification.Library;
 using UEAT.Notification.Library.SMS.Welcome;
-using Xunit;
 
-namespace UEAT.Notification.Library.Tests.ChannelNotifications;
+namespace UEAT.Notification.Tests.ChannelNotifications;
 
 public class SmsChannelNotificationTests
 {

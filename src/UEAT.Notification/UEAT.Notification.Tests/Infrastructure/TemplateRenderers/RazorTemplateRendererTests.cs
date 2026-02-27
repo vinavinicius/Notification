@@ -1,13 +1,12 @@
-using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 using RazorLight;
 using UEAT.Notification.Core;
 using UEAT.Notification.Core.ValueObjects;
 using UEAT.Notification.Infrastructure.TemplateRenderers.Razor;
-using Xunit;
+using UEAT.Notification.Library.SMS.Welcome;
 
-namespace UEAT.Notification.Library.Tests.Infrastructure.TemplateRenderers;
+namespace UEAT.Notification.Tests.Infrastructure.TemplateRenderers;
 
 public class RazorTemplateRendererTests
 {
@@ -18,7 +17,7 @@ public class RazorTemplateRendererTests
 
         var renderer = new RazorTemplateRenderer(
             engineMock.Object,
-            [typeof(SMS.Welcome.WelcomeSmsNotification).Assembly]);
+            [typeof(WelcomeSmsNotification).Assembly]);
 
         var notificationMock = new Mock<INotification>();
         notificationMock
@@ -36,7 +35,7 @@ public class RazorTemplateRendererTests
         var engineMock = new Mock<IRazorLightEngine>();
         var renderer = new RazorTemplateRenderer(
             engineMock.Object,
-            [typeof(SMS.Welcome.WelcomeSmsNotification).Assembly]);
+            [typeof(WelcomeSmsNotification).Assembly]);
 
         var notificationMock = new Mock<INotification>();
         notificationMock
@@ -80,9 +79,9 @@ public class RazorTemplateRendererTests
 
         var renderer = new RazorTemplateRenderer(
             engineMock.Object,
-            [typeof(Library.SMS.Welcome.WelcomeSmsNotification).Assembly]);
+            [typeof(WelcomeSmsNotification).Assembly]);
 
-        var notification = new Library.SMS.Welcome.WelcomeSmsNotification(
+        var notification = new WelcomeSmsNotification(
             System.Globalization.CultureInfo.GetCultureInfo("en-CA"),
             new MobilePhone("1", "581", "5551234"))
         {

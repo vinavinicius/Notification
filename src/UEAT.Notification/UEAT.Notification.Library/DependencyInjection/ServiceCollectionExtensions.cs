@@ -2,7 +2,6 @@ using System.Reflection;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -10,15 +9,12 @@ using Polly;
 using Polly.Extensions.Http;
 using RazorLight;
 using SendGrid.Extensions.DependencyInjection;
-using Twilio.Clients;
-using Twilio.Http;
 using UEAT.Notification.Core;
 using UEAT.Notification.Core.Email;
 using UEAT.Notification.Core.SMS;
 using UEAT.Notification.Infrastructure.Configurations;
 using UEAT.Notification.Infrastructure.Email.SendGrid;
 using UEAT.Notification.Infrastructure.SMS.Folio;
-using UEAT.Notification.Infrastructure.SMS.Twilio;
 using UEAT.Notification.Infrastructure.TemplateRenderers.Razor;
 using UEAT.Notification.Library.SMS.Welcome;
 using UEAT.Notification.Library.Webhooks;
@@ -75,45 +71,6 @@ public static class ServiceCollectionExtensions
                     .HandleTransientHttpError()
                     .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
-        builder.Services.AddScoped<IChannelNotification, SmsChannelNotification>();
-
-        return builder;
-    }
-
-    public static NotificationLibraryServicesBuilder AddTwilioSmsProvider(
-        this NotificationLibraryServicesBuilder builder)
-    {
-        builder.Services
-            .AddOptions<TwilioConfigurations>()
-            .Bind(builder.Configuration.GetSection(nameof(TwilioConfigurations)))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        builder.Services.AddHttpClient("TwilioClient")
-            .AddPolicyHandler(
-                HttpPolicyExtensions
-                    .HandleTransientHttpError()
-                    .WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)))
-            )
-            .AddPolicyHandler(
-                HttpPolicyExtensions
-                    .HandleTransientHttpError()
-                    .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30))
-            );
-
-        builder.Services.AddSingleton<ITwilioRestClient>(sp =>
-        {
-            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-            var httpClient = httpClientFactory.CreateClient("TwilioClient");
-            var config = sp.GetRequiredService<IOptions<TwilioConfigurations>>().Value;
-            return new TwilioRestClient(
-                config.AccountName,
-                config.AccountKey,
-                httpClient: new SystemNetHttpClient(httpClient)
-            );
-        });
-
-        builder.Services.AddScoped<ISmsClient, TwilioSmsClient>();
         builder.Services.AddScoped<IChannelNotification, SmsChannelNotification>();
 
         return builder;
