@@ -1,7 +1,6 @@
 using System.Globalization;
 using UEAT.Notification.Core;
 using UEAT.Notification.Core.ValueObjects;
-using UEAT.Notification.Infrastructure.DependencyInjection;
 using UEAT.Notification.Library.DependencyInjection;
 using UEAT.Notification.Library.SMS.Welcome;
 
@@ -10,11 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 var libraryAssembly = typeof(WelcomeSmsNotification).Assembly;
 
 builder.Services
-    .AddNotificationInfrastructure(builder.Configuration, libraryAssembly)
+    .AddNotificationLibrary(builder.Configuration)
     .AddFolioSmsProvider()
     .AddSendGridEmailProvider();
-
-builder.Services.AddNotificationLibrary();
 
 var app = builder.Build();
 

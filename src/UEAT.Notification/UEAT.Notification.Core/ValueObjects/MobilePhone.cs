@@ -22,7 +22,7 @@ public sealed record MobilePhone
         if (!Regex.IsMatch(areaCode ?? "", @"^\d{2,3}$"))
             throw new ArgumentException("Invalid area code.", nameof(areaCode));
 
-        if (!Regex.IsMatch(number ?? "", @"^\d{8,9}$"))
+        if (!Regex.IsMatch(number ?? "", @"^\d{7,9}$"))
             throw new ArgumentException("Invalid number.", nameof(number));
 
         CountryCode = countryCode;

@@ -36,7 +36,7 @@ public sealed class NotificationSender(
                 "Failed to send notification via {SenderType}. Notification: {notification}",
                 channel.GetType().Name,
                 JsonSerializer.Serialize(notification));
-            
+
             throw;
         }
     }

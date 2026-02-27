@@ -29,13 +29,13 @@
     <ItemGroup>
         <PackageReference Include="FluentValidation" Version="11.9.0" />
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
         <PackageReference Include="RazorLight" Version="2.3.1" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\UEAT.Notification.Core\UEAT.Notification.Core.csproj" />
+        <ProjectReference Include="..\UEAT.Notification.Infrastructure\UEAT.Notification.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>

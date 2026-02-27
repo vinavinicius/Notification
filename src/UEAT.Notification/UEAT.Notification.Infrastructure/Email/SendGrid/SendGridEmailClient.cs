@@ -17,7 +17,7 @@ public class SendGridEmailClient(
     : IEmailClient
 {
     private readonly SendGridConfigurations _sendGridConfigurations = sendGridOptions.Value;
-    
+
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
     {
         var from = new EmailAddress(_sendGridConfigurations.FromEmail, _sendGridConfigurations.FromName);
@@ -30,13 +30,13 @@ public class SendGridEmailClient(
         if (!response.IsSuccessStatusCode)
         {
             var responseBody = await response.Body.ReadAsStringAsync(cancellationToken);
-            
+
             logger.LogError(
                 "SendGrid API failed after all retries. StatusCode: {StatusCode}, Response: {Response}, To: {To}",
                 (int)response.StatusCode,
                 responseBody,
                 message.To);
-            
+
             throw new HttpRequestException(
                 $"SendGrid API returned {(int)response.StatusCode}: {responseBody}");
         }
@@ -46,7 +46,7 @@ public class SendGridEmailClient(
             message.To,
             (int)response.StatusCode);
     }
-    
+
     private static readonly HttpStatusCode[] RetryableStatusCodes =
     [
         HttpStatusCode.RequestTimeout,
