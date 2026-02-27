@@ -1,7 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using FluentValidation;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using UEAT.Notification.Core;
 
@@ -10,10 +8,16 @@ namespace UEAT.Notification.Library;
 public class NotificationSender(
     IEnumerable<IChannelNotification> channels,
     IEnumerable<ITemplateRenderer> templateRenderers,
-    IServiceProvider serviceProvider,
+    INotificationValidator validator, 
     ILogger<NotificationSender> logger)
     : INotificationSender
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+        MaxDepth = 128
+    };
+    
     public async Task SendAsync(INotification notification, CancellationToken cancellationToken = default)
     {
         var channel = channels.FirstOrDefault(s => s.CanHandle(notification));
@@ -24,7 +28,8 @@ public class NotificationSender(
                 $"No channel registered for notification type: {notification.GetType().Name}");
         }
 
-        await ValidateAsync(notification, cancellationToken);
+        await validator.ValidateAsync(notification, cancellationToken);
+
         var content = await RenderContentAsync(notification);
 
         try
@@ -47,24 +52,6 @@ public class NotificationSender(
             SerializeNotification(notification));
     }
 
-    private async Task ValidateAsync<T>(T notification, CancellationToken cancellationToken) where T : INotification
-    {
-        using var scope = serviceProvider.CreateScope();
-        var provider = scope.ServiceProvider;
-
-        var validatorType = typeof(IValidator<>)
-            .MakeGenericType(notification.GetType());
-
-        if (provider.GetService(validatorType) is not IValidator validator)
-            return;
-
-        var context = new ValidationContext<object>(notification);
-        var result = await validator.ValidateAsync(context, cancellationToken);
-
-        if (!result.IsValid)
-            throw new ValidationException(result.Errors);
-    }
-
     private async Task<string> RenderContentAsync(INotification notification)
     {
         var templateRenderer = templateRenderers.FirstOrDefault(s => s.CanRender(notification));
@@ -78,12 +65,8 @@ public class NotificationSender(
         return await templateRenderer.RenderAsync(notification);
     }
     
-    private string SerializeNotification(INotification notification)
+    private static string SerializeNotification(INotification notification)
     {
-        return JsonSerializer.Serialize(notification, new JsonSerializerOptions
-        {
-            ReferenceHandler = ReferenceHandler.IgnoreCycles,
-            MaxDepth = 128
-        });
+        return JsonSerializer.Serialize(notification, JsonSerializerOptions);
     }
 }
