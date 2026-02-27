@@ -4,7 +4,7 @@ using UEAT.Notification.Core;
 
 namespace UEAT.Notification.Library;
 
-internal class FluentValidationNotificationValidator(IServiceProvider serviceProvider) : INotificationValidator
+public class FluentValidationNotificationValidator(IServiceProvider serviceProvider) : INotificationValidator
 {
     public async Task ValidateAsync(INotification notification, CancellationToken ct)
     {
