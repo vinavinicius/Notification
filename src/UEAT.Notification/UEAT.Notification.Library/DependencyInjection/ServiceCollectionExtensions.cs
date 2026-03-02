@@ -16,7 +16,7 @@ using UEAT.Notification.Infrastructure.Configurations;
 using UEAT.Notification.Infrastructure.Email.SendGrid;
 using UEAT.Notification.Infrastructure.SMS.Folio;
 using UEAT.Notification.Infrastructure.TemplateRenderers.Razor;
-using UEAT.Notification.Library.SMS.Welcome;
+using UEAT.Notification.Library.SMS.NoDateOrder;
 using UEAT.Notification.Library.Webhooks;
 
 namespace UEAT.Notification.Library.DependencyInjection;
@@ -47,7 +47,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<INotificationValidator, FluentValidationNotificationValidator>();
         services.AddScoped<INotificationSender, NotificationSender>();
         services.AddLocalization();
-        services.AddValidatorsFromAssemblyContaining<WelcomeSmsNotificationValidator>();
+        services.AddValidatorsFromAssemblyContaining<NoDateOrderNotification>();
 
         return builder;
     }

@@ -12,8 +12,7 @@ using UEAT.Notification.Infrastructure.Email.SendGrid;
 using UEAT.Notification.Infrastructure.SMS.Folio;
 using UEAT.Notification.Infrastructure.TemplateRenderers.Razor;
 using UEAT.Notification.Library;
-using UEAT.Notification.Library.Email.Welcome;
-using UEAT.Notification.Library.SMS.Welcome;
+using UEAT.Notification.Library.SMS.NoDateOrder;
 using WireMock.RequestBuilders;
 using WireMock.Server;
 using Response = WireMock.ResponseBuilders.Response;
@@ -37,12 +36,12 @@ public class NotificationEndToEndIntegrationTests : IDisposable
             .RespondWith(Response.Create().WithStatusCode(200).WithBody("OK"));
 
         var sender = BuildSmsSender();
-        var notification = new WelcomeSmsNotification(
+        var notification = new NoDateOrderNotification(
             CultureInfo.GetCultureInfo("en-CA"),
-            new MobilePhone("1", "581", "5551234"))
-        {
-            Message = "Hello World"
-        };
+            new MobilePhone("1", "581", "5551234"),
+            orderNumber: 12345,
+            restaurantName: "Testaurant");
+
 
         await sender.SendAsync(notification);
         
@@ -60,12 +59,11 @@ public class NotificationEndToEndIntegrationTests : IDisposable
             .RespondWith(Response.Create().WithStatusCode(200).WithBody("OK"));
 
         var sender = BuildSmsSender();
-        var notification = new WelcomeSmsNotification(
+        var notification = new NoDateOrderNotification(
             CultureInfo.GetCultureInfo("fr-CA"),
-            new MobilePhone("1", "581", "5551234"))
-        {
-            Message = "Monde"
-        };
+            new MobilePhone("1", "581", "5551234"),
+            orderNumber: 12345,
+            restaurantName: "Testaurant");
 
         await sender.SendAsync(notification);
         
@@ -83,12 +81,12 @@ public class NotificationEndToEndIntegrationTests : IDisposable
             .RespondWith(Response.Create().WithStatusCode(200).WithBody("OK"));
 
         var sender = BuildSmsSender();
-        var notification = new WelcomeSmsNotification(
+        var notification = new NoDateOrderNotification(
             CultureInfo.GetCultureInfo("en-CA"),
-            new MobilePhone("1", "514", "5559999"))
-        {
-            Message = "Test"
-        };
+            new MobilePhone("1", "514", "5559999"),
+            orderNumber: 12345,
+            restaurantName: "Testaurant");
+
 
         await sender.SendAsync(notification);
         
@@ -100,12 +98,11 @@ public class NotificationEndToEndIntegrationTests : IDisposable
     public async Task SmsPipeline_ValidationFails_EmptyMessage_DoesNotCallProvider()
     {
         var sender = BuildSmsSender();
-        var invalidNotification = new WelcomeSmsNotification(
+        var invalidNotification = new NoDateOrderNotification(
             CultureInfo.GetCultureInfo("en-CA"),
-            new MobilePhone("1", "581", "5551234"))
-        {
-            Message = string.Empty
-        };
+            new MobilePhone("1", "581", "5551234"),
+            orderNumber: 12345,
+            restaurantName: string.Empty);
 
         var act = async () => await sender.SendAsync(invalidNotification);
 
@@ -122,84 +119,30 @@ public class NotificationEndToEndIntegrationTests : IDisposable
             .RespondWith(Response.Create().WithStatusCode(500).WithBody("Internal Server Error"));
 
         var sender = BuildSmsSender();
-        var notification = new WelcomeSmsNotification(
+        var notification = new NoDateOrderNotification(
             CultureInfo.GetCultureInfo("en-CA"),
-            new MobilePhone("1", "581", "5551234"))
-        {
-            Message = "Test"
-        };
+            new MobilePhone("1", "581", "5551234"),
+            orderNumber: 12345,
+            restaurantName: "Testaurant");
 
         var act = async () => await sender.SendAsync(notification);
 
         await act.Should().ThrowAsync<HttpRequestException>()
             .WithMessage("*500*");
     }
-    
-    [Fact]
-    public async Task EmailPipeline_EnglishNotification_RendersAndSendsCorrectContent()
-    {
-        _server
-            .Given(Request.Create().WithPath("/v3/mail/send").UsingPost())
-            .RespondWith(Response.Create().WithStatusCode(202));
 
-        var sender = BuildEmailSender();
-        var notification = new WelcomeEmailNotification(
-            CultureInfo.GetCultureInfo("en-CA"),
-            new EmailAddress("user@example.com"),
-            subject: "Welcome!");
-
-        await sender.SendAsync(notification);
-        
-        var body = _server.LogEntries.Should().ContainSingle().Subject.RequestMessage.Body!;
-
-        body.Should().Contain("user@example.com");
-        body.Should().Contain("Welcome!");
-    }
-
-    [Fact]
-    public async Task EmailPipeline_FrenchNotification_RendersLocalizedContent()
-    {
-        _server
-            .Given(Request.Create().WithPath("/v3/mail/send").UsingPost())
-            .RespondWith(Response.Create().WithStatusCode(202));
-
-        var sender = BuildEmailSender();
-        var notification = new WelcomeEmailNotification(
-            CultureInfo.GetCultureInfo("fr-CA"),
-            new EmailAddress("utilisateur@exemple.com"),
-            subject: "Bienvenue!");
-
-        await sender.SendAsync(notification);
-        
-        var capturedBody = _server.LogEntries.Single().RequestMessage.Body!;
-        capturedBody.Should().Contain("Bienvenue");
-    }
-
-    [Fact]
-    public async Task EmailPipeline_ValidationFails_InvalidSubject_DoesNotCallProvider()
-    {
-        var sender = BuildEmailSender();
-        var invalidNotification = new WelcomeEmailNotification(
-            CultureInfo.GetCultureInfo("en-CA"),
-            new EmailAddress("user@example.com"),
-            subject: string.Empty);
-
-        var act = async () => await sender.SendAsync(invalidNotification);
-
-        await act.Should().ThrowAsync<FluentValidation.ValidationException>();
-        _server.LogEntries.Should().BeEmpty();
-    }
 
     [Fact]
     public async Task Pipeline_NoChannelForNotificationType_ThrowsInvalidOperationException()
     {
         var sender = BuildSmsSender();
-        var emailNotification = new WelcomeEmailNotification(
+        var smsNotification = new NoDateOrderNotification(
             CultureInfo.GetCultureInfo("en-CA"),
-            new EmailAddress("user@example.com"),
-            subject: "Hello");
+            new MobilePhone("1", "581", "5551234"),
+            orderNumber: 12345,
+            restaurantName: "Testaurant");
 
-        var act = async () => await sender.SendAsync(emailNotification);
+        var act = async () => await sender.SendAsync(smsNotification);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*No channel registered*");
@@ -208,13 +151,13 @@ public class NotificationEndToEndIntegrationTests : IDisposable
     private INotificationSender BuildSmsSender()
     {
         var razorEngine = new RazorLightEngineBuilder()
-            .UseEmbeddedResourcesProject(typeof(WelcomeSmsNotification).Assembly)
+            .UseEmbeddedResourcesProject(typeof(NoDateOrderSmsNotificationValidator).Assembly)
             .UseMemoryCachingProvider()
             .Build();
 
         var templateRenderer = new RazorTemplateRenderer(
             razorEngine,
-            [typeof(WelcomeSmsNotification).Assembly]);
+            [typeof(NoDateOrderSmsNotificationValidator).Assembly]);
 
         var httpClient = new HttpClient { BaseAddress = new Uri(_server.Url!) };
         var smsClient = new FolioSmsClient(httpClient, NullLogger<FolioSmsClient>.Instance);
@@ -239,13 +182,13 @@ public class NotificationEndToEndIntegrationTests : IDisposable
     private INotificationSender BuildEmailSender()
     {
         var razorEngine = new RazorLightEngineBuilder()
-            .UseEmbeddedResourcesProject(typeof(WelcomeEmailNotification).Assembly)
+            .UseEmbeddedResourcesProject(typeof(NoDateOrderSmsNotificationValidator).Assembly)
             .UseMemoryCachingProvider()
             .Build();
 
         var templateRenderer = new RazorTemplateRenderer(
             razorEngine,
-            [typeof(WelcomeEmailNotification).Assembly]);
+            [typeof(NoDateOrderSmsNotificationValidator).Assembly]);
 
         var sendGridConfig = Options.Create(new SendGridConfigurations
         {
@@ -294,16 +237,16 @@ internal static class ServiceCollectionTestExtensions
     public static IServiceCollection AddValidatorsForSms(this IServiceCollection services)
     {
         services.AddScoped<
-            FluentValidation.IValidator<WelcomeSmsNotification>,
-            WelcomeSmsNotificationValidator>();
+            FluentValidation.IValidator<NoDateOrderNotification>,
+            NoDateOrderSmsNotificationValidator>();
         return services;
     }
 
     public static IServiceCollection AddValidatorsForEmail(this IServiceCollection services)
     {
         services.AddScoped<
-            FluentValidation.IValidator<WelcomeEmailNotification>,
-            WelcomeEmailNotificationValidator>();
+            FluentValidation.IValidator<NoDateOrderNotification>,
+            NoDateOrderSmsNotificationValidator>();
         return services;
     }
 }

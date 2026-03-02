@@ -4,7 +4,7 @@ using RazorLight;
 using UEAT.Notification.Core;
 using UEAT.Notification.Core.ValueObjects;
 using UEAT.Notification.Infrastructure.TemplateRenderers.Razor;
-using UEAT.Notification.Library.SMS.Welcome;
+using UEAT.Notification.Library.SMS.NoDateOrder;
 
 namespace UEAT.Notification.Tests.Infrastructure.TemplateRenderers;
 
@@ -17,12 +17,12 @@ public class RazorTemplateRendererTests
 
         var renderer = new RazorTemplateRenderer(
             engineMock.Object,
-            [typeof(WelcomeSmsNotification).Assembly]);
+            [typeof(RazorTemplateRendererTests).Assembly]);
 
         var notificationMock = new Mock<INotification>();
         notificationMock
             .Setup(x => x.Template)
-            .Returns("UEAT.Notification.Library.SMS.Welcome.Template.cshtml");
+            .Returns("UEAT.Notification.Library.SMS.NoDateOrder.Template.cshtml");
 
         var result = renderer.CanRender(notificationMock.Object);
 
@@ -35,7 +35,7 @@ public class RazorTemplateRendererTests
         var engineMock = new Mock<IRazorLightEngine>();
         var renderer = new RazorTemplateRenderer(
             engineMock.Object,
-            [typeof(WelcomeSmsNotification).Assembly]);
+            [typeof(NoDateOrderNotification).Assembly]);
 
         var notificationMock = new Mock<INotification>();
         notificationMock
@@ -56,7 +56,7 @@ public class RazorTemplateRendererTests
         var notificationMock = new Mock<INotification>();
         notificationMock
             .Setup(x => x.Template)
-            .Returns("UEAT.Notification.Library.SMS.Welcome.Template.cshtml");
+            .Returns("UEAT.Notification.Library.SMS.NoDateOrder.Template.cshtml");
 
         var result = renderer.CanRender(notificationMock.Object);
 
@@ -66,7 +66,7 @@ public class RazorTemplateRendererTests
     [Fact]
     public async Task RenderAsync_ShouldCallEngineWithCorrectTemplateKey()
     {
-        const string templateKey = "UEAT.Notification.Library.SMS.Welcome.Template.cshtml";
+        const string templateKey = "UEAT.Notification.Library.SMS.NoDateOrder.Template.cshtml";
         const string expectedOutput = "Welcome! Your message.";
 
         var engineMock = new Mock<IRazorLightEngine>();
@@ -79,14 +79,13 @@ public class RazorTemplateRendererTests
 
         var renderer = new RazorTemplateRenderer(
             engineMock.Object,
-            [typeof(WelcomeSmsNotification).Assembly]);
+            [typeof(NoDateOrderNotification).Assembly]);
 
-        var notification = new WelcomeSmsNotification(
+        var notification = new NoDateOrderNotification(
             System.Globalization.CultureInfo.GetCultureInfo("en-CA"),
-            new MobilePhone("1", "581", "5551234"))
-        {
-            Message = "Your message.",
-        };
+            new MobilePhone("1", "581", "5551234"),
+            orderNumber: 12345,
+            restaurantName: "Testaurant");
 
         var result = await renderer.RenderAsync(notification);
 

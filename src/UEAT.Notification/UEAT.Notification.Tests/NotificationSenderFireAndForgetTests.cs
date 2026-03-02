@@ -8,7 +8,7 @@ using Moq;
 using UEAT.Notification.Core;
 using UEAT.Notification.Core.ValueObjects;
 using UEAT.Notification.Library;
-using UEAT.Notification.Library.SMS.Welcome;
+using UEAT.Notification.Library.SMS.NoDateOrder;
 
 namespace UEAT.Notification.Tests;
 
@@ -178,12 +178,10 @@ public class NotificationSenderFireAndForgetTests
 
         await act.Should().ThrowAsync<TaskCanceledException>();
     }
-    
-    private static WelcomeSmsNotification ValidNotification() =>
-        new(CultureInfo.GetCultureInfo("en-CA"), new MobilePhone("1", "581", "5551234"))
-        {
-            Message = "Welcome!"
-        };
+
+    private static NoDateOrderNotification ValidNotification() =>
+        new(CultureInfo.GetCultureInfo("en-CA"), new MobilePhone("1", "581", "5551234"), orderNumber: 12345,
+            restaurantName: "Testaurant");
     
     private NotificationSender BuildSender(
         IEnumerable<IChannelNotification>? channels = null,

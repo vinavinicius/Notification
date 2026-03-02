@@ -2,7 +2,7 @@ using System.Globalization;
 using UEAT.Notification.Core;
 using UEAT.Notification.Core.ValueObjects;
 using UEAT.Notification.Library.DependencyInjection;
-using UEAT.Notification.Library.SMS.Welcome;
+using UEAT.Notification.Library.SMS.NoDateOrder;
 using UEAT.Notification.Library.Webhooks;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,10 +29,7 @@ app.MapPost("/send-sms", async (INotificationSender sender, SmsRequest request, 
     {
         logger.LogInformation("Sending SMS to {PhoneNumber}", request.PhoneNumber);
         var culture = new CultureInfo(request.Language ?? "en-CA");
-        var notification = new WelcomeSmsNotification(culture, new MobilePhone("1", "581", request.PhoneNumber))
-        {
-            Message = request.Message ?? "Welcome!"
-        };
+        var notification = new NoDateOrderNotification(culture, new MobilePhone("1", "581", request.PhoneNumber), orderNumber: 12345, restaurantName: "Testaurant");
 
         await sender.SendAsync(notification);
         logger.LogInformation("SMS sent successfully to {PhoneNumber}", request.PhoneNumber);
