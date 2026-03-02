@@ -47,7 +47,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<INotificationValidator, FluentValidationNotificationValidator>();
         services.AddScoped<INotificationSender, NotificationSender>();
         services.AddLocalization();
-        services.AddValidatorsFromAssemblyContaining<NoDateOrderNotification>();
+        services.AddValidatorsFromAssemblyContaining<NoDateOrderSmsNotification>();
 
         return builder;
     }

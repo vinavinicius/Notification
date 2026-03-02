@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace UEAT.Notification.Library.SMS.NoDateOrder;
 
-public class NoDateOrderSmsNotificationValidator : SmsNotificationValidatorBase<NoDateOrderNotification>
+public class NoDateOrderSmsNotificationValidator : SmsNotificationValidatorBase<NoDateOrderSmsNotification>
 {
     public NoDateOrderSmsNotificationValidator()
     {

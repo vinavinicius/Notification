@@ -4,7 +4,7 @@ using UEAT.Notification.Core.ValueObjects;
 
 namespace UEAT.Notification.Library.SMS.NoDateOrder;
 
-public class NoDateOrderNotification(CultureInfo cultureInfo, MobilePhone mobilePhone, int orderNumber, string restaurantName)
+public class NoDateOrderSmsNotification(CultureInfo cultureInfo, MobilePhone mobilePhone, int orderNumber, string restaurantName)
     : ISmsNotification
 {
     public CultureInfo CultureInfo { get; } = cultureInfo;

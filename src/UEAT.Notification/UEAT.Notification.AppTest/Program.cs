@@ -29,7 +29,7 @@ app.MapPost("/send-sms", async (INotificationSender sender, SmsRequest request, 
     {
         logger.LogInformation("Sending SMS to {PhoneNumber}", request.PhoneNumber);
         var culture = new CultureInfo(request.Language ?? "en-CA");
-        var notification = new NoDateOrderNotification(culture, new MobilePhone("1", "581", request.PhoneNumber), orderNumber: 12345, restaurantName: "Testaurant");
+        var notification = new NoDateOrderSmsNotification(culture, new MobilePhone("1", "581", request.PhoneNumber), orderNumber: 12345, restaurantName: "Testaurant");
 
         await sender.SendAsync(notification);
         logger.LogInformation("SMS sent successfully to {PhoneNumber}", request.PhoneNumber);

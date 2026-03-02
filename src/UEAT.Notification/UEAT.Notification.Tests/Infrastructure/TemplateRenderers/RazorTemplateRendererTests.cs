@@ -17,7 +17,7 @@ public class RazorTemplateRendererTests
 
         var renderer = new RazorTemplateRenderer(
             engineMock.Object,
-            [typeof(RazorTemplateRendererTests).Assembly]);
+            [typeof(NoDateOrderSmsNotification).Assembly]);
 
         var notificationMock = new Mock<INotification>();
         notificationMock
@@ -35,7 +35,7 @@ public class RazorTemplateRendererTests
         var engineMock = new Mock<IRazorLightEngine>();
         var renderer = new RazorTemplateRenderer(
             engineMock.Object,
-            [typeof(NoDateOrderNotification).Assembly]);
+            [typeof(NoDateOrderSmsNotification).Assembly]);
 
         var notificationMock = new Mock<INotification>();
         notificationMock
@@ -79,9 +79,9 @@ public class RazorTemplateRendererTests
 
         var renderer = new RazorTemplateRenderer(
             engineMock.Object,
-            [typeof(NoDateOrderNotification).Assembly]);
+            [typeof(NoDateOrderSmsNotification).Assembly]);
 
-        var notification = new NoDateOrderNotification(
+        var notification = new NoDateOrderSmsNotification(
             System.Globalization.CultureInfo.GetCultureInfo("en-CA"),
             new MobilePhone("1", "581", "5551234"),
             orderNumber: 12345,

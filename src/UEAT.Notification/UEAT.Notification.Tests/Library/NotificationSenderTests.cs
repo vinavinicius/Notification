@@ -17,7 +17,7 @@ public class NotificationSenderTests
     private readonly Mock<INotificationValidator> _validatorMock = new();
     private readonly NotificationChannel _notificationChannel = new();
 
-    private static NoDateOrderNotification ValidNotification() =>
+    private static NoDateOrderSmsNotification ValidNotification() =>
         new(CultureInfo.GetCultureInfo("en-CA"), new MobilePhone("1", "581", "5551234"), orderNumber: 12345, restaurantName: "Testaurant");
 
     private NotificationSender BuildSender(

@@ -179,7 +179,7 @@ public class NotificationSenderFireAndForgetTests
         await act.Should().ThrowAsync<TaskCanceledException>();
     }
 
-    private static NoDateOrderNotification ValidNotification() =>
+    private static NoDateOrderSmsNotification ValidNotification() =>
         new(CultureInfo.GetCultureInfo("en-CA"), new MobilePhone("1", "581", "5551234"), orderNumber: 12345,
             restaurantName: "Testaurant");
     

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -17,19 +18,19 @@ using WireMock.RequestBuilders;
 using WireMock.Server;
 using Response = WireMock.ResponseBuilders.Response;
 
-namespace UEAT.Notification.Tests;
+namespace UEAT.Notification.Tests.SMS;
 
-public class NotificationEndToEndIntegrationTests : IDisposable
+public class NoDateOrderSmsNotificationTests : IDisposable
 {
     private readonly WireMockServer _server;
 
-    public NotificationEndToEndIntegrationTests()
+    public NoDateOrderSmsNotificationTests()
     {
         _server = WireMockServer.Start();
     }
     
     [Fact]
-    public async Task SmsPipeline_CorrectPhoneNumber_IsSentToProvider()
+    public async Task SmsPipeline_NoDateOrderSmsNotificationInEnglish_RendersAndSendsCorrectContent()
     {
         _server
             .Given(Request.Create().WithPath("/send").UsingPost())
@@ -38,92 +39,72 @@ public class NotificationEndToEndIntegrationTests : IDisposable
         var sender = BuildSmsSender();
         var notification = new NoDateOrderSmsNotification(
             CultureInfo.GetCultureInfo("en-CA"),
-            new MobilePhone("1", "514", "5559999"),
+            new MobilePhone("1", "581", "5551234"),
             orderNumber: 12345,
-            restaurantName: "Testaurant");
+            restaurantName: "Restaurant");
 
 
         await sender.SendAsync(notification);
-        
-        var body = _server.LogEntries.Single().RequestMessage.Body!;
-        body.Should().Contain("to=%2B15145559999");
+
+        var logEntry = _server.LogEntries.Should().ContainSingle().Subject;
+        var body = logEntry.RequestMessage.Body!;
+        var decodedBody = WebUtility.UrlDecode(body);
+
+        decodedBody.Should()
+            .Contain(
+                "message=UEAT: Thank you for your order 12345 at Restaurant. Reply STOP to opt out. Messaging rates may apply.");
     }
-
+    
     [Fact]
-    public async Task SmsPipeline_ValidationFails_EmptyMessage_DoesNotCallProvider()
-    {
-        var sender = BuildSmsSender();
-        var invalidNotification = new NoDateOrderSmsNotification(
-            CultureInfo.GetCultureInfo("en-CA"),
-            new MobilePhone("1", "581", "5551234"),
-            orderNumber: 12345,
-            restaurantName: string.Empty);
-
-        var act = async () => await sender.SendAsync(invalidNotification);
-
-        await act.Should().ThrowAsync<FluentValidation.ValidationException>();
-
-        _server.LogEntries.Should().BeEmpty();
-    }
-
-    [Fact]
-    public async Task SmsPipeline_ProviderReturns500_ThrowsAndDoesNotSwallow()
+    public async Task SendAsync_InFrench_RendersLocalizedContent()
     {
         _server
             .Given(Request.Create().WithPath("/send").UsingPost())
-            .RespondWith(Response.Create().WithStatusCode(500).WithBody("Internal Server Error"));
+            .RespondWith(Response.Create().WithStatusCode(200).WithBody("OK"));
 
         var sender = BuildSmsSender();
         var notification = new NoDateOrderSmsNotification(
-            CultureInfo.GetCultureInfo("en-CA"),
+            CultureInfo.GetCultureInfo("fr-CA"),
             new MobilePhone("1", "581", "5551234"),
             orderNumber: 12345,
-            restaurantName: "Testaurant");
+            restaurantName: "Restaurant");
 
-        var act = async () => await sender.SendAsync(notification);
+        await sender.SendAsync(notification);
 
-        await act.Should().ThrowAsync<HttpRequestException>()
-            .WithMessage("*500*");
+        var logEntry = _server.LogEntries.Should().ContainSingle().Subject;
+        var body = logEntry.RequestMessage.Body!;
+        var decodedBody = WebUtility.UrlDecode(body);
+
+        decodedBody.Should()
+            .Contain(
+                "message=UEAT: Merci pour votre commande 12345 chez Restaurant. STOP pour se désabonner. Frais de msg peuvent s’appliquer.");
     }
 
     [Fact]
-    public async Task Pipeline_NoChannelForNotificationType_ThrowsInvalidOperationException()
+    public async Task SendAsync_InSpanish_RendersLocalizedContent()
     {
-        var razorEngine = new RazorLightEngineBuilder()
-            .UseEmbeddedResourcesProject(typeof(NoDateOrderSmsNotificationValidator).Assembly)
-            .UseMemoryCachingProvider()
-            .Build();
+        _server
+            .Given(Request.Create().WithPath("/send").UsingPost())
+            .RespondWith(Response.Create().WithStatusCode(200).WithBody("OK"));
 
-        var templateRenderer = new RazorTemplateRenderer(
-            razorEngine,
-            [typeof(NoDateOrderSmsNotificationValidator).Assembly]);
-
-        var services = new ServiceCollection();
-        services.AddValidatorsForSms();
-        var sp = services.BuildServiceProvider();
-        var serviceScopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-
-        var validator = new FluentValidationNotificationValidator(serviceScopeFactory);
-
-        var sender = new NotificationSender(
-            channels: [],
-            templateRenderers: [templateRenderer],
-            validator: validator,
-            notificationChannel: new NotificationChannel(),
-            logger: NullLogger<NotificationSender>.Instance);
-
-        var smsNotification = new NoDateOrderSmsNotification(
-            CultureInfo.GetCultureInfo("en-CA"),
+        var sender = BuildSmsSender();
+        var notification = new NoDateOrderSmsNotification(
+            CultureInfo.GetCultureInfo("es-CA"),
             new MobilePhone("1", "581", "5551234"),
             orderNumber: 12345,
-            restaurantName: "Testaurant");
+            restaurantName: "Restaurant");
 
-        var act = async () => await sender.SendAsync(smsNotification);
+        await sender.SendAsync(notification);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*No channel registered*");
+        var logEntry = _server.LogEntries.Should().ContainSingle().Subject;
+        var body = logEntry.RequestMessage.Body!;
+        var decodedBody = WebUtility.UrlDecode(body);
+
+        decodedBody.Should()
+            .Contain(
+                "message=UEAT: Gracias por su pedido 12345 en Restaurant. Responda STOP para darse de baja. Cargos por msj/datos.");
     }
-    
+
     private INotificationSender BuildSmsSender()
     {
         var razorEngine = new RazorLightEngineBuilder()
@@ -154,7 +135,7 @@ public class NotificationEndToEndIntegrationTests : IDisposable
             notificationChannel: notificationChannel,
             logger: NullLogger<NotificationSender>.Instance);
     }
-    
+
     private INotificationSender BuildEmailSender()
     {
         var razorEngine = new RazorLightEngineBuilder()
@@ -205,24 +186,5 @@ public class NotificationEndToEndIntegrationTests : IDisposable
     {
         _server.Stop();
         _server.Dispose();
-    }
-}
-
-internal static class ServiceCollectionTestExtensions
-{
-    public static IServiceCollection AddValidatorsForSms(this IServiceCollection services)
-    {
-        services.AddScoped<
-            FluentValidation.IValidator<NoDateOrderSmsNotification>,
-            NoDateOrderSmsNotificationValidator>();
-        return services;
-    }
-
-    public static IServiceCollection AddValidatorsForEmail(this IServiceCollection services)
-    {
-        services.AddScoped<
-            FluentValidation.IValidator<NoDateOrderSmsNotification>,
-            NoDateOrderSmsNotificationValidator>();
-        return services;
     }
 }

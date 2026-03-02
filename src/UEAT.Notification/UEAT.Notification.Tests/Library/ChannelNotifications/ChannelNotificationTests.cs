@@ -19,7 +19,7 @@ public class SmsChannelNotificationTests
         _channel = new SmsChannelNotification(_smsClientMock.Object);
     }
 
-    private static NoDateOrderNotification ValidSmsNotification() => new NoDateOrderNotification(
+    private static NoDateOrderSmsNotification ValidSmsNotification() => new(
         new CultureInfo("en-US"),
         new MobilePhone("1", "581", "5551234"),
         orderNumber: 12345,
