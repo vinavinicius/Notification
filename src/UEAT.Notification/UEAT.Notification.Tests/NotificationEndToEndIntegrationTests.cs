@@ -222,8 +222,9 @@ public class NotificationEndToEndIntegrationTests : IDisposable
         var services = new ServiceCollection();
         services.AddValidatorsForSms();
         var sp = services.BuildServiceProvider();
+        var serviceScopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
 
-        var validator = new FluentValidationNotificationValidator(sp);
+        var validator = new FluentValidationNotificationValidator(serviceScopeFactory);
         var channel = new SmsChannelNotification(smsClient);
         var notificationChannel = new NotificationChannel();
 
@@ -267,8 +268,9 @@ public class NotificationEndToEndIntegrationTests : IDisposable
         var services = new ServiceCollection();
         services.AddValidatorsForEmail();
         var sp = services.BuildServiceProvider();
+        var serviceScopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
 
-        var validator = new FluentValidationNotificationValidator(sp);
+        var validator = new FluentValidationNotificationValidator(serviceScopeFactory);
         var channel = new EmailChannelNotification(emailClient);
         var notificationChannel = new NotificationChannel();
 
