@@ -15,24 +15,6 @@ namespace UEAT.Notification.Tests;
 public class NotificationSenderFireAndForgetTests
 {
     private readonly NotificationChannel _notificationChannel = new();
-
-    private static WelcomeSmsNotification ValidNotification() =>
-        new(CultureInfo.GetCultureInfo("en-CA"), new MobilePhone("1", "581", "5551234"))
-        {
-            Message = "Welcome!"
-        };
-
-    private NotificationSender BuildSender(
-        IEnumerable<IChannelNotification>? channels = null,
-        IEnumerable<ITemplateRenderer>? renderers = null,
-        INotificationValidator? validator = null,
-        NotificationChannel? notificationChannel = null) =>
-        new(
-            channels ?? [],
-            renderers ?? [],
-            validator ?? Mock.Of<INotificationValidator>(),
-            notificationChannel ?? _notificationChannel,
-            NullLogger<NotificationSender>.Instance);
     
     [Fact]
     public void Send_WritesNotificationToChannel()
@@ -58,7 +40,15 @@ public class NotificationSenderFireAndForgetTests
         sender.Send(n2);
         sender.Send(n3);
 
-        _notificationChannel.Reader.Count.Should().Be(3);
+        var reader = _notificationChannel.Reader;
+
+        reader.TryRead(out var r1);
+        reader.TryRead(out var r2);
+        reader.TryRead(out var r3);
+
+        n1.Should().Be(r1);
+        n2.Should().Be(r2);
+        n3.Should().Be(r3);
     }
 
     [Fact]
@@ -182,12 +172,30 @@ public class NotificationSenderFireAndForgetTests
             NullLogger<NotificationBackgroundService>.Instance);
 
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         var act = async () => await worker.ExecutePublicAsync(cts.Token);
 
-        await act.Should().NotThrowAsync();
+        await act.Should().ThrowAsync<TaskCanceledException>();
     }
+    
+    private static WelcomeSmsNotification ValidNotification() =>
+        new(CultureInfo.GetCultureInfo("en-CA"), new MobilePhone("1", "581", "5551234"))
+        {
+            Message = "Welcome!"
+        };
+    
+    private NotificationSender BuildSender(
+        IEnumerable<IChannelNotification>? channels = null,
+        IEnumerable<ITemplateRenderer>? renderers = null,
+        INotificationValidator? validator = null,
+        NotificationChannel? notificationChannel = null) =>
+        new(
+            channels ?? [],
+            renderers ?? [],
+            validator ?? Mock.Of<INotificationValidator>(),
+            notificationChannel ?? _notificationChannel,
+            NullLogger<NotificationSender>.Instance);
 }
 
 file sealed class NotificationBackgroundService(
