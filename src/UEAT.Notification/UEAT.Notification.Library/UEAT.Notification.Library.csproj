@@ -16,15 +16,18 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <DependentUpon>WelcomeEmailNotification.resx</DependentUpon>
         </EmbeddedResource>
-        <EmbeddedResource Update="SMS\Welcome\WelcomeSmsNotification.en.resx">
-          <DependentUpon>WelcomeSmsNotification.resx</DependentUpon>
-        </EmbeddedResource>
-        <EmbeddedResource Update="SMS\Welcome\WelcomeSmsNotification.fr.resx">
-          <DependentUpon>WelcomeSmsNotification.resx</DependentUpon>
-        </EmbeddedResource>
         <EmbeddedResource Update="Email\Welcome\WelcomeEmailNotification.resx">
           <Generator>ResXFileCodeGenerator</Generator>
           <LastGenOutput>WelcomeEmailNotification.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SMS\NoDateOrder\NoDateOrderSmsNotification.en.resx">
+          <DependentUpon>NoDateOrderSmsNotification.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SMS\NoDateOrder\NoDateOrderSmsNotification.fr.resx">
+          <DependentUpon>NoDateOrderSmsNotification.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SMS\NoDateOrder\NoDateOrderSmsNotification.es.resx">
+          <DependentUpon>NoDateOrderSmsNotification.cs</DependentUpon>
         </EmbeddedResource>
     </ItemGroup>
 

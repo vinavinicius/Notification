@@ -1,8 +1,0 @@
-@using UEAT.Notification.Library.Email.Welcome
-@inherits RazorLight.TemplatePage<dynamic>
-@{
-    DisableEncoding = true;
-    Layout = null;
-    var data = (WelcomeEmailNotification)Model.Data;
-}
-@Model.L("WelcomeMessage", data.To.Address)

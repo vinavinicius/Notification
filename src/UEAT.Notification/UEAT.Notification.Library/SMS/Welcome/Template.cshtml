@@ -1,8 +1,0 @@
-@using UEAT.Notification.Library.SMS.Welcome
-@inherits RazorLight.TemplatePage<dynamic>
-@{
-    DisableEncoding = true;
-    Layout = null;
-    var data = (WelcomeSmsNotification)Model.Data;
-}
-@Model.L("WelcomeMessage", data.Message)

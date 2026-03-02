@@ -1,0 +1,8 @@
+@using UEAT.Notification.Library.SMS.NoDateOrder
+@inherits RazorLight.TemplatePage<dynamic>
+@{
+    DisableEncoding = true;
+    Layout = null;
+    var data = (NoDateOrderSmsNotification)Model.Data;
+}
+@Model.L("WelcomeMessage", data.OrderNumber, data.RestaurantName)

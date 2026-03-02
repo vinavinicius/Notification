@@ -1,11 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-
 <root>
-    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-        <xsd:element name="root" msdata:IsDataSet="true">
-            
-        </xsd:element>
-    </xsd:schema>
     <resheader name="resmimetype">
         <value>text/microsoft-resx</value>
     </resheader>
@@ -18,7 +11,7 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="WelcomeMessage" xml:space="preserve">
-        <value>Welcome {0}</value>
+    <data name="Message" xml:space="preserve">
+        <value>UEAT: Thank you for your order {0} at {1}. Reply STOP to opt out. Messaging rates may apply.</value>
     </data>
 </root>

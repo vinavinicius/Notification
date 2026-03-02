@@ -11,7 +11,7 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="WelcomeMessage" xml:space="preserve">
-        <value>Welcome {0}</value>
+    <data name="Message" xml:space="preserve">
+        <value>UEAT: Merci pour votre commande {0} chez {1}. STOP pour se désabonner. Frais de msg peuvent s’appliquer.</value>
     </data>
 </root>
